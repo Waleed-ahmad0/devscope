@@ -12,10 +12,11 @@ export default function DashboardLayout({
 }: Readonly<{
     children: React.ReactNode;
 }>) {
+
     return (
-        <div className="min-h-screen bg-slate-50">
-            <Sidebar />
-            <Topbar />
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 dark:bg-slate-950">
+            <Sidebar  />
+            <Topbar  />
             <main className="ml-64 pt-16">
                 {children}
             </main>

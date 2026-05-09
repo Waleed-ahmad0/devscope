@@ -16,8 +16,12 @@ const userschema = new Schema(
       enum: ["pending", "in progress", "completed"],
       default: "pending",
     },
-    project: {
-      type: String,
+    assignedTo: {
+      type: mongoose.Schema.Types.ObjectId ,
+      ref: "User",
+    },
+    projectId: {
+      type: mongoose.Schema.Types.ObjectId,
       required: true,
     },
     Duedate:{

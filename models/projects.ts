@@ -2,6 +2,7 @@ import mongoose, { Schema, model, models } from "mongoose";
 interface projectinterface {
   name: string;
   description: string;
+  team: mongoose.Schema.Types.ObjectId;
   userId: string;
   status: string;
 }
@@ -14,6 +15,11 @@ const userschema = new Schema<projectinterface>(
     description: {
       type: String,
       required: true,
+    },
+    team: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref : "Team",
     },
     status: {
       type: String,
@@ -29,9 +35,6 @@ const userschema = new Schema<projectinterface>(
     timestamps: true,
   },
 );
-// Delete cached model to ensure schema changes are picked up during dev hot-reloads
-if (models?.Project) {
-  mongoose.deleteModel("Project");
-}
-const Project = model("Project", userschema);
+
+const Project =models?.Project|| model("Project", userschema);
 export default Project;

@@ -1,0 +1,281 @@
+"use client";
+import { useState } from "react";
+
+interface MemberInput {
+  user: string;
+  role: "admin" | "member";
+}
+
+export default function addMember({
+  owneremail,
+  id,
+  isOpen,
+  setIsOpen,
+}: {
+  owneremail:string,
+  id: string;
+  isOpen: boolean;
+  setIsOpen: (value: boolean) => void;
+}) {
+  const [members, setMembers] = useState<MemberInput[]>([
+    { user: "", role: "member" },
+  ]);
+  const [errors, setErrors] = useState<{ members: string }>({
+    members: "",
+  });
+  const [submitting, setSubmitting] = useState(false);
+
+  const addMember = () => {
+    setMembers((prev) => [...prev, { user: "", role: "member" }]);
+  };
+
+  const removeMember = (index: number) => {
+    setMembers((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const updateMember = (
+    index: number,
+    field: keyof MemberInput,
+    value: string,
+  ) => {
+    setMembers((prev) =>
+      prev.map((m, i) => (i === index ? { ...m, [field]: value } : m)),
+    );
+    if (errors.members) setErrors((prev) => ({ ...prev, members: "" }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    // console.log(e);
+    // Only validate filled member rows
+    const filledMembers = members.filter((m) => m.user.trim() !== "" );
+    console.log(filledMembers);
+      if (filledMembers.some(m => m.user === owneremail)) {
+      setErrors({ members: "You cannot add yourself as a member" });
+      return;
+    }
+    if (filledMembers.some((obj, index) => 
+    filledMembers.findIndex(item => item.user === obj.user) !== index)) {
+      setErrors({members: "You cannot add same memeber twice" });
+      return;
+    }
+    const newErrors = {
+      members: "",
+    };
+    setErrors(newErrors);
+    //if the entered email is already a member  ``or admin
+    // if () {
+
+    // }
+    setSubmitting(true);
+    const sendingmember = {
+      members: filledMembers.map((m) => ({
+        user: m.user.trim(),
+        role: m.role,
+      })),
+    };
+    // console.log("sendingmember", sendingmember.members);
+    try {
+      const res = await fetch(`/api/teams/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(sendingmember),
+      });
+      const data = await res.json();
+      console.log("member add:", data);
+      if (res.ok) {
+        setMembers([{ user: "", role: "member" }]);
+        setIsOpen(false);
+      }
+      // if () {
+      //   setErrors({ members: data.error });
+      // }
+    } catch (err) {
+      // setSubmitting(false);
+      console.error("Failed to add member:", err);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleClose = () => {
+    setMembers([{ user: "", role: "member" }]);
+    setErrors({ members: "" });
+    setIsOpen(false);
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        onClick={handleClose}
+      />
+
+      {/* Modal */}
+      <div className="relative w-full max-w-lg mx-4 animate-in fade-in zoom-in-95">
+        <div className="bg-gradient-to-br from-blue-50 to-white rounded-2xl shadow-xl border border-blue-100 p-8">
+          {/* Close button */}
+          <button
+            onClick={handleClose}
+            className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:text-slate-400 dark:text-slate-400 transition-colors"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+
+          {/* Header */}
+          <div className="mb-8">
+            <h2 className="text-3xl font-bold text-blue-900 mb-2">
+              add member
+            </h2>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* member Name */}
+
+            {/* Creator is admin notice */}
+            <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-blue-50 border border-blue-200">
+              <svg
+                className="w-4 h-4 text-blue-600 shrink-0"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <p className="text-sm text-blue-700">
+                You will remain the team admin
+              </p>
+            </div>
+
+            {/* Members */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="block text-sm font-semibold text-blue-900">
+                  Members
+                </label>
+                <button
+                  type="button"
+                  onClick={addMember}
+                  className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 transition-colors"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M12 4v16m8-8H4"
+                    />
+                  </svg>
+                  Add Member
+                </button>
+              </div>
+
+              {members.length === 0 ? (
+                <p className="text-sm text-slate-400 py-2">
+                  No members added yet. You can add members now or after
+                  creating the member.
+                </p>
+              ) : (
+                <div className="space-y-3 max-h-48 overflow-y-auto pr-1">
+                  {members.map((member, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={member.user}
+                        onChange={(e) =>
+                          updateMember(index, "user", e.target.value)
+                        }
+                        className="flex-1 px-4 py-2.5 rounded-lg border-2 transition-all duration-200 bg-white dark:bg-slate-900 dark:bg-slate-900 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent border-blue-200 hover:border-blue-300"
+                        placeholder="Email or username"
+                      />
+                      <select
+                        value={member.role}
+                        onChange={(e) =>
+                          updateMember(index, "role", e.target.value)
+                        }
+                        className="px-3 py-2.5 rounded-lg border-2 border-blue-200 hover:border-blue-300 bg-white dark:bg-slate-900 dark:bg-slate-900 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                      >
+                        <option value="member">Member</option>
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => removeMember(index)}
+                        className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                      >
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                  {errors.members && (
+                    <p className="text-sm text-red-500 flex items-center gap-1">
+                      <span className="shrink-0">⚠</span>
+                      <span>
+                        {" "}
+                         <b>{errors.members}</b>
+                      </span>
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={handleClose}
+                className="flex-1 py-3 px-6 rounded-lg border-2 border-blue-200 text-blue-700 font-semibold hover:bg-blue-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={submitting}
+                className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {submitting ? "adding..." : "add member"}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
