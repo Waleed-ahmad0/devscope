@@ -67,7 +67,7 @@ export default function Page() {
     return (
         <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-purple-50 via-indigo-50 to-blue-50 px-4 py-12">
             <div className="w-full max-w-md">
-                <div className="bg-white dark:bg-slate-900 dark:bg-slate-900 rounded-2xl shadow-2xl p-8 border border-gray-100">
+                <div className="bg-white rounded-2xl shadow-2xl p-8 border border-gray-100 animate-fade-in-up">
                     <div className="text-center mb-8">
                         <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
                         <p className="text-gray-600">Sign in to your account</p>
@@ -142,10 +142,10 @@ export default function Page() {
                                         ? 'opacity-50 cursor-not-allowed'
                                         : 'hover:-translate-y-0.5 hover:shadow-md active:translate-y-0'
                                         } ${provider === 'google'
-                                            ? 'border-gray-300 bg-white dark:bg-slate-900 dark:bg-slate-900 hover:border-blue-500 hover:bg-gray-50'
+                                            ? 'border-gray-300 bg-white hover:border-blue-500 hover:bg-gray-50'
                                             : provider === 'discord'
-                                                ? 'border-gray-300 bg-white dark:bg-slate-900 dark:bg-slate-900 hover:border-indigo-500 hover:bg-gray-50'
-                                                : 'border-gray-300 bg-white dark:bg-slate-900 dark:bg-slate-900 hover:border-gray-800 hover:bg-gray-50'
+                                                ? 'border-gray-300 bg-white hover:border-indigo-500 hover:bg-gray-50'
+                                                : 'border-gray-300 bg-white hover:border-gray-800 hover:bg-gray-50'
                                         }`}
                                 >
                                     {loadingProvider === provider ? (

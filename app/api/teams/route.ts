@@ -39,7 +39,7 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    console.log(body);
+    // 
 
     // Convert email addresses to user IDs
     const members = await Promise.all(
@@ -59,16 +59,16 @@ export async function POST(req: Request) {
     const objectId = new mongoose.Types.ObjectId(session.user.id);
     const teamdata = {
       ...body,
-      members, // Now contains resolved user IDs
+      members,
       ownerId: objectId,
     };
 
-    console.log("Team data to save:", teamdata);
+    // 
 
-    // Uncomment when ready to save
     const createdTeam = await Team.create(teamdata);
 
     const createactivity = {
+      userName: (session?.user?.name || session?.user?.firstName)?.trim(),
       userId: new mongoose.Types.ObjectId(session?.user?.id),
       teamId: new mongoose.Types.ObjectId(createdTeam._id),
       projectId: new mongoose.Types.ObjectId(createdTeam.projectId),
@@ -78,7 +78,6 @@ export async function POST(req: Request) {
     await activity.create(createactivity);
     return NextResponse.json(createdTeam, { status: 201 });
 
-    // return NextResponse.json({ teamdata }, { status: 200 });
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Server error" },

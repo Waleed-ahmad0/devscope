@@ -44,7 +44,6 @@ export default function CreateTeam({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(e);
     // Only validate filled member rows
     const filledMembers = members.filter((m) => m.user.trim() !== "");
     if (filledMembers.some((m) => m.user === owneremail )) {
@@ -78,7 +77,6 @@ export default function CreateTeam({
         }),
       });
       const data = await res.json();
-      console.log("Team created:", data);
       if (res.ok) {
         setName("");
         setMembers([]);
@@ -121,7 +119,7 @@ export default function CreateTeam({
           {/* Close button */}
           <button
             onClick={handleClose}
-            className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:text-slate-400 dark:text-slate-400 transition-colors"
+            className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors"
           >
             <svg
               className="w-5 h-5"
@@ -164,7 +162,7 @@ export default function CreateTeam({
                 onChange={(e) => {
                   setName(e.target.value);
                 }}
-                className={`w-full px-4 py-3 rounded-lg border-2 transition-all duration-200 bg-white dark:bg-slate-900 dark:bg-slate-900 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${"border-blue-200 hover:border-blue-300"}`}
+                className={`w-full px-4 py-3 rounded-lg border-2 transition-all duration-200 bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${"border-blue-200 hover:border-blue-300"}`}
                 placeholder="e.g. Startup Alpha"
               />
             </div>
@@ -233,7 +231,7 @@ export default function CreateTeam({
                         onChange={(e) =>
                           updateMember(index, "user", e.target.value)
                         }
-                        className="flex-1 px-4 py-2.5 rounded-lg border-2 transition-all duration-200 bg-white dark:bg-slate-900 dark:bg-slate-900 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent border-blue-200 hover:border-blue-300"
+                        className="flex-1 px-4 py-2.5 rounded-lg border-2 transition-all duration-200 bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent border-blue-200 hover:border-blue-300"
                         placeholder="Email or username"
                       />
                       <select
@@ -241,7 +239,7 @@ export default function CreateTeam({
                         onChange={(e) =>
                           updateMember(index, "role", e.target.value)
                         }
-                        className="px-3 py-2.5 rounded-lg border-2 border-blue-200 hover:border-blue-300 bg-white dark:bg-slate-900 dark:bg-slate-900 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                        className="px-3 py-2.5 rounded-lg border-2 border-blue-200 hover:border-blue-300 bg-white text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                       >
                         <option value="member">Member</option>
                         <option value="admin">Admin</option>

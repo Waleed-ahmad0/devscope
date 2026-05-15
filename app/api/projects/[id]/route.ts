@@ -43,7 +43,7 @@ export async function GET(
 });
 
     // const checking= proj
-    // console.log(project, "projectttt");
+    // 
     const membersWithNames = await Promise.all(
       project.team.members?.map(async (m: Members) => {
         const check = await User.findById(m.user);

@@ -36,14 +36,12 @@ export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   try {
     const body = await req.json();
-    // console.log("body", body);
-    console.log(session?.user?.name,'hello nigger')
+    // 
     const sendingtask = {
       ...body,
       projectId: new mongoose.Types.ObjectId(body.projectId),
       createdby: session?.user?.name?.trim() || session?.user?.firstName.trim()
     };
-    console.log("sendingtask", sendingtask);
     dbConnect();
     const task = await Task.create(sendingtask);
     const createactivity = {
@@ -53,7 +51,6 @@ export async function POST(req: NextRequest) {
       action: `Created task ${body.title}`,
       createdAt: new Date(),
     };
-    console.log(createactivity);
     await activity.create(createactivity);
     return NextResponse.json({ message: "POST" });
   } catch (error) {

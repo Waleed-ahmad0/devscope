@@ -44,7 +44,7 @@ interface Task {
 
 interface Activity {
   _id: string;
-
+  userName: string;
   userId?: {
     _id: string;
     firstName: string;
@@ -71,6 +71,7 @@ export default function ProjectDetailPage({
   const [activities, setActivities] = useState<Activity[]>([]);
   const [activitiesLoading, setActivitiesLoading] = useState(false);
   const [project, setproject] = useState<ProjectDetail | null>(null);
+  const [projectLoading, setProjectLoading] = useState(true);
   const [isNotFound, setIsNotFound] = useState(false);
   const [progress, setprogress] = useState<number>(0);
   const [refresh, setrefresh] = useState<boolean>(false);
@@ -100,7 +101,6 @@ export default function ProjectDetailPage({
         const res = await fetch(`/api/activity?projectId=${id}`);
         const data = await res.json();
         setActivities(data.getactivity || []);
-        console.log(data);
       } catch (err) {
         console.error("Failed to fetch activities:", err);
       } finally {
@@ -127,12 +127,6 @@ export default function ProjectDetailPage({
   };
   const changeprojetdata = async (e: React.FormEvent) => {
     e.preventDefault();
-    // if (!project) return;
-    // // console.log(projectName, projectStatus);
-    // if (projectName === "" || projectStatus === "") {
-    //   setProjectName(project.name);
-    //   setProjectStatus(project.status);
-    // }
 
     try {
       if (projectName === "") {
@@ -143,7 +137,6 @@ export default function ProjectDetailPage({
         body: JSON.stringify({ name: projectName, status: projectStatus }),
       });
       const updated = await res.json();
-      console.log(updated);
       setrefresh((prev) => !prev);
     } catch (error) {
       console.error("Failed to update project:", error);
@@ -192,8 +185,8 @@ export default function ProjectDetailPage({
     }
     // Default
     return {
-      bg: "bg-slate-100 dark:bg-slate-800",
-      color: "text-slate-600 dark:text-slate-400",
+      bg: "bg-slate-100",
+      color: "text-slate-600",
       path: "M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
     };
   };
@@ -208,22 +201,19 @@ export default function ProjectDetailPage({
       case "Done":
         return "bg-green-100 text-green-700";
       default:
-        return "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300";
+        return "bg-slate-100 text-slate-700";
     }
   };
 
   useEffect(() => {
-    if (project === null) {
-      return () => {
-        <div>loading screen plz wait ...................</div>;
-      };
+    if (project === null && !projectLoading) {
+      setIsNotFound(true);
     }
-  }, [project, isNotFound]);
+  }, [project, projectLoading]);
 
   const handleTaskSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
-    console.log(taskForm);
     try {
       if (taskForm.assignedTo === "") {
         const { assignedTo, ...rest } = taskForm;
@@ -239,7 +229,6 @@ export default function ProjectDetailPage({
           }),
         });
         const created = await res.json();
-        console.log(created);
         setrefresh((prev) => !prev);
         setTaskForm({
           title: "",
@@ -263,7 +252,6 @@ export default function ProjectDetailPage({
         method: "DELETE",
       });
       const deleted = await res.json();
-      console.log(deleted);
       // setrefresh((prev) => !prev);
 
       router.replace("/dashboard/projects");
@@ -273,22 +261,27 @@ export default function ProjectDetailPage({
   };
   useEffect(() => {
     const getprojects = async () => {
-      const request = await fetch(`/api/projects/${id}`);
-      const gettasks = await fetch(`/api/tasks/${id}`);
-      const response = await request.json();
-      const tasks = await gettasks.json();
-      const comptask = tasks.filter((item: any) => item.status === "completed");
-      setprogress((comptask.length / tasks.length) * 100);
-      // console.log(tasks);
-      settasks(tasks);
-      if(!request.ok){
+      setProjectLoading(true);
+      try {
+        const request = await fetch(`/api/projects/${id}`);
+        const gettasks = await fetch(`/api/tasks/${id}`);
+        if (!request.ok) {
+          setproject(null);
+          return;
+        }
+        const response = await request.json();
+        const tasksData = await gettasks.json();
+        const comptask = tasksData.filter((item: any) => item.status === "completed");
+        setprogress((comptask.length / (tasksData.length || 1)) * 100);
+        settasks(tasksData);
+        setproject(response.data);
+        setProjectName(response.data.name);
+        setProjectStatus(response.data.status);
+      } catch (err) {
         setproject(null);
-        return
+      } finally {
+        setProjectLoading(false);
       }
-      // console.log("response", response);
-      setproject(response.data);
-      setProjectName(response.data.name);
-      setProjectStatus(response.data.status);
     };
     getprojects();
   }, [id, refresh]);
@@ -296,7 +289,7 @@ export default function ProjectDetailPage({
   if (isNotFound) {
     notFound();
   }
-
+  const deleteteam = async () => {};
   const handleStatusChange = async (
     taskId: string,
     newStatus: "pending" | "in progress" | "completed",
@@ -408,14 +401,14 @@ export default function ProjectDetailPage({
     return {
       label: "",
       rawDate: formattedDate,
-      color: "text-slate-500 dark:text-slate-400",
+      color: "text-slate-500",
       isOverdue: false,
     };
   };
 
   const renderTaskCard = (task: Task) => {
     const statusColors: Record<Task["status"], string> = {
-      pending: "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300",
+      pending: "bg-slate-100 text-slate-700",
       "in progress": "bg-amber-100 text-amber-700",
       completed: "bg-emerald-100 text-emerald-700",
     };
@@ -440,14 +433,14 @@ export default function ProjectDetailPage({
           setDraggedTaskId(null);
           setDragOverColumn(null);
         }}
-        className={`bg-white dark:bg-slate-900 rounded-xl border p-4 shadow-sm hover:shadow-md transition-all duration-200 cursor-grab active:cursor-grabbing ${
+        className={`bg-white rounded-xl border p-4 shadow-sm hover:shadow-md transition-all duration-200 cursor-grab active:cursor-grabbing ${
           draggedTaskId === task._id
             ? "opacity-40 scale-[0.97] shadow-lg ring-2 ring-blue-400"
             : ""
         } ${
           dueDateInfo.isOverdue
             ? "border-red-300 border-l-4 border-l-red-500 bg-red-50/30"
-            : "border-slate-200 dark:border-slate-700"
+            : "border-slate-200"
         }`}
       >
         {/* Status badge + Overdue badge */}
@@ -478,19 +471,19 @@ export default function ProjectDetailPage({
         </div>
 
         {/* Title */}
-        <h4 className="font-semibold text-slate-900 dark:text-slate-50 text-sm leading-snug mb-3">
+        <h4 className="font-semibold text-slate-900 text-sm leading-snug mb-3">
           {task.title}
         </h4>
 
         {/* Description preview */}
         {task.description && (
-          <p className="text-xs text-slate-500 dark:text-slate-400 mb-3 line-clamp-2 leading-relaxed">
+          <p className="text-xs text-slate-500 mb-3 line-clamp-2 leading-relaxed">
             {task.description}
           </p>
         )}
 
         {/* Meta row */}
-        <div className="flex flex-wrap gap-3 text-xs text-slate-500 dark:text-slate-400 mb-3">
+        <div className="flex flex-wrap gap-3 text-xs text-slate-500 mb-3">
           <span
             className={`flex items-center gap-1 font-medium ${dueDateInfo.color}`}
           >
@@ -530,7 +523,7 @@ export default function ProjectDetailPage({
           </span>
         </div>
         {/* Divider */}
-        <div className="border-t border-slate-100 dark:border-slate-800 pt-3">
+        <div className="border-t border-slate-100 pt-3">
           <select
             value={task.status}
             onChange={(e) =>
@@ -540,7 +533,7 @@ export default function ProjectDetailPage({
                 task.title,
               )
             }
-            className={` w-full px-3 py-1.5 text-xs font-medium bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer hover:bg-slate-100 dark:bg-slate-800 transition-colors`}
+            className={` w-full px-3 py-1.5 text-xs font-medium bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer hover:bg-slate-100 transition-colors`}
           >
             <option value="pending">📋 Move to To Do</option>
             <option value="in progress">🔄 Move to In Progress</option>
@@ -552,7 +545,7 @@ export default function ProjectDetailPage({
   };
 
   const renderEmptyColumn = () => (
-    <div className="flex flex-col items-center justify-center py-10 px-4 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl text-center">
+    <div className="flex flex-col items-center justify-center py-10 px-4 border-2 border-dashed border-slate-200 rounded-xl text-center">
       <svg
         className="w-10 h-10 text-slate-300 mb-3"
         fill="none"
@@ -579,14 +572,14 @@ export default function ProjectDetailPage({
           return (
             <div className="space-y-6 ">
               {/* Description Card */}
-              <div className="bg-white dark:bg-slate-900 p-6 rounded-lg border border-slate-200 dark:border-slate-700">
-                <h3 className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">
+              <div className="bg-white p-6 rounded-lg border border-slate-200">
+                <h3 className="text-sm font-medium text-slate-600 mb-2">
                   Description
                 </h3>
-                <p className="text-slate-900 dark:text-slate-50">
+                <p className="text-slate-900">
                   {project.description || "No description provided."}
                 </p>
-                <div className="mt-4 flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+                <div className="mt-4 flex items-center gap-2 text-sm text-slate-500">
                   <svg
                     className="w-4 h-4"
                     fill="none"
@@ -614,7 +607,7 @@ export default function ProjectDetailPage({
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {/* Progress Card */}
-                <div className="bg-white dark:bg-slate-900 p-6 rounded-lg border border-slate-200 dark:border-slate-700">
+                <div className="bg-white p-6 rounded-lg border border-slate-200">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
                       <svg
@@ -631,14 +624,14 @@ export default function ProjectDetailPage({
                         />
                       </svg>
                     </div>
-                    <h3 className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                    <h3 className="text-sm font-medium text-slate-600">
                       Progress
                     </h3>
                   </div>
-                  <div className="text-3xl font-bold text-slate-900 dark:text-slate-50 mb-2">
+                  <div className="text-3xl font-bold text-slate-900 mb-2">
                     {(progress || 0).toFixed(1)}%
                   </div>
-                  <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
+                  <div className="w-full bg-slate-200 rounded-full h-2">
                     <div
                       className="bg-blue-600 h-2 rounded-full transition-all"
                       style={{ width: `${progress || 0}%` }}
@@ -647,7 +640,7 @@ export default function ProjectDetailPage({
                 </div>
 
                 {/* Total Tasks Card */}
-                <div className="bg-white dark:bg-slate-900 p-6 rounded-lg border border-slate-200 dark:border-slate-700">
+                <div className="bg-white p-6 rounded-lg border border-slate-200">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center">
                       <svg
@@ -664,17 +657,17 @@ export default function ProjectDetailPage({
                         />
                       </svg>
                     </div>
-                    <h3 className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                    <h3 className="text-sm font-medium text-slate-600">
                       Total Tasks
                     </h3>
                   </div>
-                  <div className="text-3xl font-bold text-slate-900 dark:text-slate-50">
+                  <div className="text-3xl font-bold text-slate-900">
                     {tasks.length}
                   </div>
                 </div>
 
                 {/* Completed Tasks Card */}
-                <div className="bg-white dark:bg-slate-900 p-6 rounded-lg border border-slate-200 dark:border-slate-700">
+                <div className="bg-white p-6 rounded-lg border border-slate-200">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
                       <svg
@@ -691,17 +684,17 @@ export default function ProjectDetailPage({
                         />
                       </svg>
                     </div>
-                    <h3 className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                    <h3 className="text-sm font-medium text-slate-600">
                       Completed
                     </h3>
                   </div>
-                  <div className="text-3xl font-bold text-slate-900 dark:text-slate-50">
+                  <div className="text-3xl font-bold text-slate-900">
                     {completedTasks}
                   </div>
                 </div>
 
                 {/* Team Card */}
-                <div className="bg-white dark:bg-slate-900 p-6 rounded-lg border border-slate-200 dark:border-slate-700">
+                <div className="bg-white p-6 rounded-lg border border-slate-200">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-10 bg-indigo-50 rounded-lg flex items-center justify-center">
                       <svg
@@ -718,9 +711,9 @@ export default function ProjectDetailPage({
                         />
                       </svg>
                     </div>
-                    <h3 className="text-sm font-medium text-slate-600 dark:text-slate-400">Team</h3>
+                    <h3 className="text-sm font-medium text-slate-600">Team</h3>
                   </div>
-                  <div className="text-3xl font-bold text-slate-900 dark:text-slate-50">
+                  <div className="text-3xl font-bold text-slate-900">
                     {project.team.name}
                   </div>
                 </div>
@@ -795,8 +788,8 @@ export default function ProjectDetailPage({
             label: "To Do",
             tasks: pendingTasks,
             dotColor: "bg-slate-400",
-            headerBg: "bg-slate-50 dark:bg-slate-950",
-            dropHighlight: "bg-slate-100 dark:bg-slate-800/80 border-slate-400",
+            headerBg: "bg-slate-50",
+            dropHighlight: "bg-slate-100/80 border-slate-400",
           },
           {
             key: "in-progress",
@@ -824,12 +817,12 @@ export default function ProjectDetailPage({
         return (
           <div className="space-y-6">
             {/* Filter Bar & Actions */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
               <div className="flex items-center gap-3 flex-wrap">
                 {/* Sort Dropdown */}
-                <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 hover:border-slate-300 transition-colors">
+                <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 hover:border-slate-300 transition-colors">
                   <svg
-                    className="w-4 h-4 text-slate-500 dark:text-slate-400"
+                    className="w-4 h-4 text-slate-500"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -844,7 +837,7 @@ export default function ProjectDetailPage({
                   <select
                     value={sortOption}
                     onChange={(e) => setSortOption(e.target.value)}
-                    className="text-sm font-medium text-slate-700 dark:text-slate-300 bg-transparent border-none focus:outline-none cursor-pointer pr-6 appearance-none"
+                    className="text-sm font-medium text-slate-700 bg-transparent border-none focus:outline-none cursor-pointer pr-6 appearance-none"
                     style={{
                       backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E")`,
                       backgroundPosition: "right 0 center",
@@ -862,7 +855,7 @@ export default function ProjectDetailPage({
 
                 {/* Task Count Badges */}
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2.5 py-1 rounded-full">
+                  <span className="text-xs font-semibold bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full">
                     {tasks.length} total
                   </span>
                   <span className="text-xs font-semibold bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full">
@@ -919,13 +912,13 @@ export default function ProjectDetailPage({
 
             {/* Task Creation Form */}
             {showTaskForm && (
-              <div className="bg-white dark:bg-slate-900 p-6 rounded-lg border border-slate-200 dark:border-slate-700">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50 mb-4">
+              <div className="bg-white p-6 rounded-lg border border-slate-200">
+                <h3 className="text-lg font-semibold text-slate-900 mb-4">
                   Create New Task
                 </h3>
                 <form onSubmit={handleTaskSubmit} className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
+                    <label className="block text-sm font-medium text-slate-600 mb-1">
                       Title
                     </label>
                     <input
@@ -936,11 +929,11 @@ export default function ProjectDetailPage({
                         setTaskForm({ ...taskForm, title: e.target.value })
                       }
                       placeholder="Enter task title"
-                      className="w-full px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
+                    <label className="block text-sm font-medium text-slate-600 mb-1">
                       Description
                     </label>
                     <textarea
@@ -954,11 +947,11 @@ export default function ProjectDetailPage({
                       }
                       placeholder="Enter task description"
                       rows={3}
-                      className="w-full px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                      className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
+                    <label className="block text-sm font-medium text-slate-600 mb-1">
                       Assign To
                     </label>
                     <select
@@ -968,7 +961,7 @@ export default function ProjectDetailPage({
                       onChange={(e) =>
                         setTaskForm({ ...taskForm, assignedTo: e.target.value })
                       }
-                      className="w-full px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-900"
+                      className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
                     >
                       <option value="">Open Tasks</option>
                       <option value={project?.team.ownerId._id}>
@@ -984,7 +977,7 @@ export default function ProjectDetailPage({
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
+                    <label className="block text-sm font-medium text-slate-600 mb-1">
                       Due Date
                     </label>
                     <input
@@ -993,11 +986,11 @@ export default function ProjectDetailPage({
                       onChange={(e) =>
                         setTaskForm({ ...taskForm, Duedate: e.target.value })
                       }
-                      className="w-full px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
+                    <label className="block text-sm font-medium text-slate-600 mb-1">
                       Status
                     </label>
                     <select
@@ -1011,7 +1004,7 @@ export default function ProjectDetailPage({
                             | "completed",
                         })
                       }
-                      className="w-full px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-900"
+                      className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
                     >
                       <option value="pending">Pending</option>
                       <option value="in progress">In Progress</option>
@@ -1037,10 +1030,10 @@ export default function ProjectDetailPage({
               {columnConfig.map((col) => (
                 <div
                   key={col.key}
-                  className={`bg-slate-50 dark:bg-slate-950/80 rounded-xl border min-h-[400px] flex flex-col transition-colors duration-200 ${
+                  className={`bg-slate-50/80 rounded-xl border min-h-[400px] flex flex-col transition-colors duration-200 ${
                     dragOverColumn === col.statusValue
                       ? col.dropHighlight
-                      : "border-slate-200 dark:border-slate-700"
+                      : "border-slate-200"
                   }`}
                   onDragOver={(e) => {
                     e.preventDefault();
@@ -1065,18 +1058,18 @@ export default function ProjectDetailPage({
                 >
                   {/* Column Header */}
                   <div
-                    className={`px-4 py-3 rounded-t-xl ${col.headerBg} border-b border-slate-200 dark:border-slate-700`}
+                    className={`px-4 py-3 rounded-t-xl ${col.headerBg} border-b border-slate-200`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div
                           className={`w-2.5 h-2.5 rounded-full ${col.dotColor}`}
                         ></div>
-                        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                        <h3 className="text-sm font-semibold text-slate-700">
                           {col.label}
                         </h3>
                       </div>
-                      <span className="text-xs font-bold bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700">
+                      <span className="text-xs font-bold bg-white text-slate-500 px-2 py-0.5 rounded-full border border-slate-200">
                         {col.tasks.length}
                       </span>
                     </div>
@@ -1156,11 +1149,11 @@ export default function ProjectDetailPage({
                     />
                   </svg>
                 </div>
-                <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                <h3 className="text-sm font-semibold text-slate-700">
                   Activity Feed
                 </h3>
                 {!activitiesLoading && activities.length > 0 && (
-                  <span className="text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 px-2 py-0.5 rounded-full">
+                  <span className="text-xs font-medium bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">
                     {activities.length}{" "}
                     {activities.length === 1 ? "event" : "events"}
                   </span>
@@ -1175,13 +1168,13 @@ export default function ProjectDetailPage({
                     <div className="w-10 h-10 border-2 border-blue-200 rounded-full"></div>
                     <div className="absolute inset-0 w-10 h-10 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
                   </div>
-                  <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                  <p className="text-sm font-medium text-slate-500">
                     Loading activity...
                   </p>
                 </div>
               </div>
             ) : activities.length === 0 ? (
-              <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-12">
+              <div className="bg-white rounded-xl border border-slate-200 p-12">
                 <div className="flex flex-col items-center justify-center text-center">
                   <div className="w-16 h-16 bg-gradient-to-br from-slate-100 to-slate-50 rounded-2xl flex items-center justify-center mb-4 shadow-sm">
                     <svg
@@ -1198,7 +1191,7 @@ export default function ProjectDetailPage({
                       />
                     </svg>
                   </div>
-                  <p className="text-sm font-semibold text-slate-600 dark:text-slate-400">
+                  <p className="text-sm font-semibold text-slate-600">
                     No activity yet
                   </p>
                   <p className="text-xs text-slate-400 mt-1.5 max-w-[240px]">
@@ -1213,10 +1206,10 @@ export default function ProjectDetailPage({
                   <div key={group.label}>
                     {/* Date group header */}
                     <div className="flex items-center gap-3 mb-3">
-                      <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
                         {group.label}
                       </span>
-                      <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700"></div>
+                      <div className="flex-1 h-px bg-slate-200"></div>
                       <span className="text-xs text-slate-400">
                         {group.items.length}{" "}
                         {group.items.length === 1 ? "event" : "events"}
@@ -1241,21 +1234,13 @@ export default function ProjectDetailPage({
                           day: "numeric",
                           year: "numeric",
                         });
-                        const userName =
-                          act.userId?.firstName || "Unknown user";
-                        const lastName = act.userId?.lastName || "";
-                        const displayName = lastName
-                          ? `${userName} ${lastName}`
-                          : userName;
-                        const userInitials =
-                          `${userName[0] || ""}${lastName[0] || ""}`.toUpperCase() ||
-                          "??";
+                        
                         const iconInfo = getActivityIcon(act.action);
 
                         return (
                           <div
                             key={act._id}
-                            className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-4 hover:shadow-md transition-all duration-200 group"
+                            className="bg-white rounded-xl border border-slate-200 p-4 hover:shadow-md transition-all duration-200 group"
                           >
                             <div className="flex items-start gap-3">
                               {/* Icon */}
@@ -1281,19 +1266,19 @@ export default function ProjectDetailPage({
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-start justify-between gap-2">
                                   <div>
-                                    <p className="text-sm text-slate-800 dark:text-slate-200 leading-snug">
-                                      <span className="font-semibold text-slate-900 dark:text-slate-50">
-                                        {displayName}
+                                    <p className="text-sm text-slate-800 leading-snug">
+                                      <span className="font-semibold text-slate-900">
+                                        {act.userName}
                                       </span>{" "}
-                                      <span className="text-slate-600 dark:text-slate-400">
+                                      <span className="text-slate-600">
                                         {act.action}
                                       </span>
                                     </p>
                                   </div>
                                   {/* Avatar */}
-                                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-[10px] font-bold shrink-0 shadow-sm">
-                                    {userInitials}
-                                  </div>
+                                  {act?.userName && <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-[10px] font-bold shrink-0 shadow-sm">
+                                    {act.userName[0].toUpperCase()}
+                                  </div>}
                                 </div>
                                 {/* Timestamp */}
                                 <div className="flex items-center gap-1.5 mt-1.5">
@@ -1310,7 +1295,7 @@ export default function ProjectDetailPage({
                                       d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
                                     />
                                   </svg>
-                                  <span className="text-xs text-slate-500 dark:text-slate-400">
+                                  <span className="text-xs text-slate-500">
                                     {timeAgo}
                                   </span>
                                   <span className="text-slate-300">·</span>
@@ -1334,19 +1319,18 @@ export default function ProjectDetailPage({
 
       case "settings": {
         if (!project) return <div>Loading...</div>;
-
-        {
-          project.team.ownerId.toString() === session?.user?.id && (
+        else {
+          return (
             <div className="space-y-6">
               {/* Project Settings */}
-              <div className="bg-white dark:bg-slate-900 p-6 rounded-lg border border-slate-200 dark:border-slate-700">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50 mb-4">
+              <div className="bg-white p-6 rounded-lg border border-slate-200">
+                <h3 className="text-lg font-semibold text-slate-900 mb-4">
                   Project Settings
                 </h3>
                 <div className="space-y-4">
                   <form onSubmit={changeprojetdata}>
                     <div>
-                      <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">
+                      <label className="block text-sm font-medium text-slate-600 mb-2">
                         Project Name
                       </label>
                       <input
@@ -1354,17 +1338,17 @@ export default function ProjectDetailPage({
                         placeholder={project.name}
                         value={projectName}
                         onChange={(e) => setProjectName(e.target.value)}
-                        className="w-full px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">
+                      <label className="block text-sm font-medium text-slate-600 mb-2">
                         Status
                       </label>
                       <select
                         value={projectStatus}
                         onChange={(e) => setProjectStatus(e.target.value)}
-                        className="w-full px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-900"
+                        className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
                       >
                         <option value="Active">Active</option>
                         <option value="Completed">Completed</option>
@@ -1381,11 +1365,11 @@ export default function ProjectDetailPage({
               </div>
 
               {/* Danger Zone */}
-              <div className="bg-white dark:bg-slate-900 p-6 rounded-lg border border-red-200">
+              <div className="bg-white p-6 rounded-lg border border-red-200">
                 <h3 className="text-lg font-semibold text-red-600 mb-2">
                   Danger Zone
                 </h3>
-                <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+                <p className="text-sm text-slate-600 mb-4">
                   Once you delete a project, there is no going back. Please be
                   certain.
                 </p>
@@ -1403,14 +1387,83 @@ export default function ProjectDetailPage({
     }
   };
 
+  function SkeletonBox({ w = "100%", h = "16px", radius = "6px" }: { w?: string; h?: string; radius?: string }) {
+    return (
+      <div
+        className="animate-pulse bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 bg-[length:200%_100%]"
+        style={{ width: w, height: h, borderRadius: radius }}
+      />
+    );
+  }
+
+  if (projectLoading) {
+    return (
+      <div className="bg-slate-50 min-h-screen">
+        <div className="p-8 max-w-7xl mx-auto">
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-3">
+              <SkeletonBox w="300px" h="36px" radius="8px" />
+              <SkeletonBox w="80px" h="28px" radius="999px" />
+            </div>
+            <div className="flex items-center gap-2">
+              <SkeletonBox w="150px" h="16px" radius="4px" />
+            </div>
+          </div>
+          <div className="mb-8 border-b border-slate-200 flex gap-8">
+            {[0, 1, 2, 3].map(i => <SkeletonBox key={i} w="80px" h="30px" radius="4px" />)}
+          </div>
+          <div className="space-y-6">
+            <div className="bg-white p-6 rounded-lg border border-slate-200">
+              <SkeletonBox w="100px" h="20px" radius="4px" />
+              <div className="mt-4 space-y-2">
+                <SkeletonBox h="14px" />
+                <SkeletonBox w="80%" h="14px" />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[0, 1, 2, 3].map(i => (
+                <div key={i} className="bg-white p-6 rounded-lg border border-slate-200">
+                  <div className="flex items-center gap-3 mb-3">
+                    <SkeletonBox w="40px" h="40px" radius="8px" />
+                    <SkeletonBox w="80px" h="16px" radius="4px" />
+                  </div>
+                  <SkeletonBox w="60px" h="36px" radius="6px" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!project) {
+    return (
+      <div className="bg-slate-50 min-h-screen flex items-center justify-center">
+        <div className="text-center p-8">
+          <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">Project Not Found</h2>
+          <p className="text-slate-500 mb-6">The project you're looking for doesn't exist or you don't have access to it.</p>
+          <button onClick={() => router.push('/dashboard/projects')} className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+            Go back to projects
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-slate-50 dark:bg-slate-950">
+    <div className="bg-slate-50 min-h-screen animate-fade-in-up">
       <div className="p-8 max-w-7xl mx-auto">
         {/* Header */}
         {project !== null && (
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-50">
+              <h1 className="text-3xl font-bold text-slate-900">
                 {project.name}
               </h1>
               <span
@@ -1419,7 +1472,7 @@ export default function ProjectDetailPage({
                 {project.status}
               </span>
             </div>
-            <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+            <div className="flex items-center gap-2 text-slate-600">
               <svg
                 className="w-4 h-4"
                 fill="none"
@@ -1439,26 +1492,28 @@ export default function ProjectDetailPage({
         )}
 
         {/* Tabs */}
-        <div className="mb-8 border-b border-slate-200 dark:border-slate-700">
+        <div className="mb-8 border-b border-slate-200">
           <div className="flex gap-8">
-            {(["overview", "tasks", "activity", "settings"] as TabType[]).map(
-              (tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`pb-3 px-1 font-medium transition-colors relative capitalize ${
-                    activeTab === tab
-                      ? "text-blue-600"
-                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-slate-50"
-                  }`}
-                >
-                  {tab}
-                  {activeTab === tab && (
-                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600"></div>
-                  )}
-                </button>
-              ),
-            )}
+            {(
+              (project?.team.ownerId._id === session?.user?.id
+                ? ["overview", "tasks", "activity", "settings"]
+                : ["overview", "tasks", "activity"]) as TabType[]
+            ).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`pb-3 px-1 font-medium transition-colors relative capitalize ${
+                  activeTab === tab
+                    ? "text-blue-600"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                {tab}
+                {activeTab === tab && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600"></div>
+                )}
+              </button>
+            ))}
           </div>
         </div>
 

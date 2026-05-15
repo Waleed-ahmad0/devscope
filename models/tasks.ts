@@ -1,10 +1,21 @@
 import mongoose, { model, models, Schema } from "mongoose";
 
-const userschema = new Schema(
+interface TaskInterface {
+  title: string;
+  description: string;
+  status: "pending" | "in progress" | "completed";
+  assignedTo?: mongoose.Schema.Types.ObjectId;
+  projectId: mongoose.Schema.Types.ObjectId;
+  dueDate: Date;
+  createdBy: string;
+}
+
+const taskSchema = new Schema<TaskInterface>(
   {
     title: {
       type: String,
       required: true,
+      index: true,                  
     },
     description: {
       type: String,
@@ -15,22 +26,27 @@ const userschema = new Schema(
       required: true,
       enum: ["pending", "in progress", "completed"],
       default: "pending",
+      index: true,                  
     },
     assignedTo: {
-      type: mongoose.Schema.Types.ObjectId ,
+      type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+      index: true,                  
     },
     projectId: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
+      index: true,                  
     },
-    Duedate:{
-        type:Date,
-        required:true
+    dueDate: {                     
+      type: Date,
+      required: true,
+      index: true,                  
     },
-    createdby: {
+    createdBy: {                   
       type: String,
       required: true,
+      index: true,                  
     },
   },
   {
@@ -38,5 +54,14 @@ const userschema = new Schema(
   },
 );
 
-const Task = models?.Task || model("Task", userschema);
+taskSchema.index({ projectId: 1, status: 1 });
+
+taskSchema.index({ assignedTo: 1, status: 1 });
+
+taskSchema.index({ projectId: 1, dueDate: 1 });
+
+taskSchema.index({ assignedTo: 1, dueDate: 1 });
+taskSchema.index({ title: "text", description: "text" });
+
+const Task = models?.Task || model("Task", taskSchema);
 export default Task;

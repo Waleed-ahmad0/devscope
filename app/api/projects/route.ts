@@ -36,7 +36,7 @@ export async function GET(req: Request) {
       "team",
       "name",
     );
-    console.log(projects);
+    // 
 
     return NextResponse.json(projects, { status: 200 });
   } catch (error) {
@@ -62,14 +62,15 @@ export async function POST(req: Request) {
       team: body.team,
     };
     const senddata = await Project.create(final_data);
-    // console.log("sendata", senddata);
+    // 
     const createactivity = {
+      userName: (session?.user?.name || session?.user?.firstName)?.trim(),
       userId: new mongoose.Types.ObjectId(session?.user?.id),
       team: new mongoose.Types.ObjectId(body.team),
-      action: `Created project ${body.name}`,
+      action: `Created project ${(body.name)?.trim()}`,
       createdAt: new Date(),
     };
-    // console.log(createactivity);
+    // 
     await activity.create(createactivity);
     return NextResponse.json(senddata, { status: 200 });
   } catch (error) {
@@ -84,7 +85,6 @@ export async function POST(req: Request) {
 export async function PATCH(req: Request) {
   const session = await getServerSession(authOptions);
   const { id } = await req.json();
-  console.log("body", id);
   await dbConnect();
   const project = await Project.findOne({ name: id });
   if (project) {
@@ -92,12 +92,13 @@ export async function PATCH(req: Request) {
     await project.save();
     const createactivity = {
       userId: new mongoose.Types.ObjectId(session?.user?.id),
+      userName: (session?.user?.name || session?.user?.firstName)?.trim(),
       teamId: new mongoose.Types.ObjectId(project.team),
       projectId: new mongoose.Types.ObjectId(project._id),
-      action: `Updated project ${project.name}`,
+      action: `Updated project ${(project.name)?.trim()}`,
       createdAt: new Date(),
     };
-    // console.log(createactivity);
+    // 
     await activity.create(createactivity);
   }
   return NextResponse.json({ message: "success" });

@@ -1,31 +1,53 @@
-import mongoose, { model, models,Schema } from "mongoose";
+import mongoose, { model, models, Schema } from "mongoose";
 
-const teamsSchema = new Schema({
-name: {
-    type: String,
-    required: true
-  },
+interface TeamMember {
+  user: mongoose.Schema.Types.ObjectId;
+  role: "admin" | "member";
+}
 
-  ownerId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required:true
-  },
+interface TeamInterface {
+  name: string;
+  ownerId: mongoose.Schema.Types.ObjectId;
+  members: TeamMember[];
+}
 
-  members: [
-    {
-      user: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User" //user id of the members
+const teamsSchema = new Schema<TeamInterface>(
+  {
+    name: {
+      type: String,
+      required: true,
+      index: true,                
+    },
+
+    ownerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,                  
+    },
+
+    members: [
+      {
+        user: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+          index: true,             
+        },
+        role: {
+          type: String,
+          enum: ["admin", "member"],
+          default: "member",
+        },
       },
-      role: {
-        type: String,
-        enum: ["admin", "member"],
-        default: "member"
-      }
-    }
-  ]
-}, { timestamps: true })
+    ],
+  },
+  { timestamps: true },
+);
 
-const Team =models?.Team || model("Team", teamsSchema);
+teamsSchema.index({ "members.user": 1, "members.role": 1 });
+
+teamsSchema.index({ ownerId: 1, name: 1 });
+teamsSchema.index({ name: "text" });
+
+const Team = models?.Team || model("Team", teamsSchema);
 export default Team;

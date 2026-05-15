@@ -133,22 +133,22 @@ export default function Topbar() {
   const userInitials = userName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2) || "JD";
 
   return (
-    <header className="h-16 bg-white dark:bg-slate-900 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700 fixed top-0 right-0 left-16 md:left-64 z-30 transition-all duration-300">
+    <header className="h-16 bg-white border-b border-slate-200 fixed top-0 right-0 left-64 z-30">
       <div className="h-full px-6 flex items-center justify-between gap-4">
         {/* Left Section - Breadcrumb & Search */}
         <div className="flex items-center gap-4 flex-1">
           {/* Breadcrumb */}
           <nav className="hidden lg:flex items-center text-sm">
-            <Link href="/dashboard" className="text-slate-600 dark:text-slate-400 dark:text-slate-400 hover:text-slate-900 dark:text-slate-50 dark:text-slate-50 transition-colors">
+            <Link href="/dashboard" className="text-slate-600 hover:text-slate-900 transition-colors">
               Dashboard
             </Link>
             <svg className="w-4 h-4 mx-2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
             </svg>
-            <span className="text-slate-900 dark:text-slate-50 dark:text-slate-50 font-medium">Overview</span>
+            <span className="text-slate-900 font-medium">Overview</span>
           </nav>
 
-          <div className="hidden lg:block w-px h-6 bg-slate-200 dark:bg-slate-700 dark:bg-slate-700"></div>
+          <div className="hidden lg:block w-px h-6 bg-slate-200"></div>
 
           <div className="flex-1 max-w-xl">
             <div className="relative" ref={dropdownRef}>
@@ -168,18 +168,18 @@ export default function Topbar() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onFocus={handleFocus}
                 placeholder="Search projects, tasks, or teams... (Cmd+K)"
-                className="w-full pl-10 pr-4 py-2 text-sm sm:text-base bg-slate-50 dark:bg-slate-950 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-slate-50 dark:text-slate-50 placeholder:text-slate-500 dark:text-slate-400 dark:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white dark:bg-slate-900 dark:bg-slate-900 transition-all"
+                className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-all"
               />
               {!isFocused && (
-                <kbd className="hidden sm:inline-flex absolute right-2 top-1/2 -translate-y-1/2 items-center gap-1 px-2 py-1 bg-white dark:bg-slate-900 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 dark:border-slate-700 rounded text-xs font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400">
+                <kbd className="hidden sm:inline-flex absolute right-2 top-1/2 -translate-y-1/2 items-center gap-1 px-2 py-1 bg-white border border-slate-200 rounded text-xs font-medium text-slate-500">
                   <span className="text-xs">⌘</span>K
                 </kbd>
               )}
 
               {isFocused && searchQuery.trim() && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-900 dark:bg-slate-900 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700 dark:border-slate-700 overflow-hidden z-50">
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-xl border border-slate-200 overflow-hidden z-50">
                   {loading ? (
-                    <div className="p-4 text-center text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Loading...</div>
+                    <div className="p-4 text-center text-sm text-slate-500">Loading...</div>
                   ) : results.length > 0 ? (
                     <div className="max-h-96 overflow-y-auto">
                       {results.map((result, idx) => (
@@ -190,7 +190,7 @@ export default function Topbar() {
                             setIsFocused(false);
                             setSearchQuery("");
                           }}
-                          className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:bg-slate-950 dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800 dark:border-slate-800 last:border-0 transition-colors"
+                          className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 border-b border-slate-100 last:border-0 transition-colors"
                         >
                           <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
                             result.type === 'project' ? 'bg-blue-100 text-blue-600' :
@@ -214,23 +214,23 @@ export default function Topbar() {
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="text-sm font-medium text-slate-900 dark:text-slate-50 dark:text-slate-50 truncate">
+                            <div className="text-sm font-medium text-slate-900 truncate">
                               {result.title}
                             </div>
                             {result.subtitle && (
-                              <div className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 truncate capitalize">
+                              <div className="text-xs text-slate-500 truncate capitalize">
                                 {result.subtitle}
                               </div>
                             )}
                           </div>
-                          <div className="text-xs text-slate-400 capitalize bg-slate-100 dark:bg-slate-800 dark:bg-slate-800 px-2 py-1 rounded">
+                          <div className="text-xs text-slate-400 capitalize bg-slate-100 px-2 py-1 rounded">
                             {result.type}
                           </div>
                         </Link>
                       ))}
                     </div>
                   ) : (
-                    <div className="p-4 text-center text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">
+                    <div className="p-4 text-center text-sm text-slate-500">
                       No results found for &quot;{searchQuery}&quot;
                     </div>
                   )}
@@ -242,12 +242,12 @@ export default function Topbar() {
 
         <div className="flex items-center gap-2">
           
-          <button className="flex items-center gap-3 pl-2 pr-3 py-1.5 hover:bg-slate-100 dark:bg-slate-800 dark:bg-slate-800 rounded-lg transition-all group">
+          <button className="flex items-center gap-3 pl-2 pr-3 py-1.5 hover:bg-slate-100 rounded-lg transition-all group">
             <div className="w-8 h-8 bg-linear-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center text-white font-semibold text-sm shrink-0">
               {userInitials}
             </div>
             <div className="hidden lg:block text-left">
-              <div className="text-sm font-semibold text-slate-900 dark:text-slate-50 dark:text-slate-50 leading-none mb-0.5">{userName}</div>
+              <div className="text-sm font-semibold text-slate-900 leading-none mb-0.5">{userName}</div>
             </div>
           </button>
         </div>

@@ -38,14 +38,12 @@ export default function DeleteMemberModal({id, isOpen, onClose, members }: Delet
 
   const handleDelete = async() => {
     const selected = members.filter(m => selectedIds.includes(m.user._id));
-    console.log('Members to delete:', selected);
     const req= await fetch(`/api/teams/${id}`,{
       method:"DELETE",
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify({selected})   
     })
     const res= await req.json()
-    console.log('res',res);
     if(req.ok){
       setSelectedIds([]);
       onClose();
@@ -59,12 +57,12 @@ export default function DeleteMemberModal({id, isOpen, onClose, members }: Delet
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-slate-900 dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-8 relative">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-8 relative">
 
         {/* Close */}
         <button
           onClick={handleCancel}
-          className="absolute top-6 right-6 text-slate-400 hover:text-slate-600 dark:text-slate-400 dark:text-slate-400 transition-colors"
+          className="absolute top-6 right-6 text-slate-400 hover:text-slate-600 transition-colors"
         >
           <X size={22} />
         </button>
@@ -83,8 +81,8 @@ export default function DeleteMemberModal({id, isOpen, onClose, members }: Delet
         {/* Members */}
         <div className="mb-2">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-sm font-bold text-slate-700 dark:text-slate-300 dark:text-slate-300">Members</span>
-            <label className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 cursor-pointer select-none">
+            <span className="text-sm font-bold text-slate-700">Members</span>
+            <label className="flex items-center gap-1.5 text-xs text-slate-500 cursor-pointer select-none">
               <input
                 type="checkbox"
                 checked={selectedIds.length === members.length && members.length > 0}
@@ -99,7 +97,7 @@ export default function DeleteMemberModal({id, isOpen, onClose, members }: Delet
             {members.map(member => (
               <label
                 key={member._id}
-                className="flex items-center gap-3 px-3 py-2.5 border border-slate-200 dark:border-slate-700 dark:border-slate-700 rounded-lg cursor-pointer hover:bg-slate-50 dark:bg-slate-950 dark:bg-slate-950 transition-colors"
+                className="flex items-center gap-3 px-3 py-2.5 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors"
               >
                 <input
                   type="checkbox"
@@ -107,7 +105,7 @@ export default function DeleteMemberModal({id, isOpen, onClose, members }: Delet
                   onChange={() => toggleOne(member.user._id)}
                   className="accent-blue-600 w-4 h-4 flex-shrink-0"
                 />
-                <span className="text-sm text-slate-700 dark:text-slate-300 dark:text-slate-300 truncate flex-1">{member.user.email}</span>
+                <span className="text-sm text-slate-700 truncate flex-1">{member.user.email}</span>
                 <span className="text-xs text-slate-400">{member.role}</span>
               </label>
             ))}
@@ -122,7 +120,7 @@ export default function DeleteMemberModal({id, isOpen, onClose, members }: Delet
         <div className="flex gap-3 mt-6">
           <button
             onClick={handleCancel}
-            className="flex-1 px-4 py-3 border border-slate-300 text-slate-700 dark:text-slate-300 dark:text-slate-300 font-semibold rounded-lg hover:bg-slate-50 dark:bg-slate-950 dark:bg-slate-950 transition-colors text-sm"
+            className="flex-1 px-4 py-3 border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 transition-colors text-sm"
           >
             Cancel
           </button>

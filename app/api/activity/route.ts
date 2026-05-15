@@ -12,12 +12,12 @@ export async function GET(req: Request) {
     const projectId = searchParams.get("projectId");
     const userId = searchParams.get("userId");
 
-    if (userId) {
+    if (userId && userId !== "undefined" && userId !== "null") {
       const getteams = await Team.find({
         $or: [{ ownerId: userId }, { "members.user": userId }],
       });
       const teamIds = getteams.map((t) => t._id);
-      // console.log(getteams)
+      // 
       const teamNames = getteams
         .slice(0, 2)
         .map(({ _id, name }) => ({ _id, name }));
@@ -31,21 +31,22 @@ export async function GET(req: Request) {
       const gettaskforproject = await Task.find({
         projectId: getprojectsId,
       });
-      // console.log("tasks", gettask);
-      // console.log("getprojects",getprojects)
-      // console.log("teamnames", teamNames);
+      // 
+      // 
+      // 
       const getactivitys = await activity
         .find({
           teamId: teamIds,
         })
-        .populate("userId", "firstName lastName")
+        // .populate("userId", "firstName email")
         .populate("projectId", "name")
         .populate("taskId", "title createdAt")
         .populate("teamId", "name")
         .sort({ createdAt: -1 })
         .limit(3);
-
-      // console.log("getactivitys1:",getactivitys);
+      const activeprojects = getprojects.filter(
+        (p) => p.status === "Active"
+      );
       return NextResponse.json(
         {
           message: "fetched activity",
@@ -53,6 +54,7 @@ export async function GET(req: Request) {
           teamNames,
           totalTeams: getteams.length,
           totalProjects: getprojects,
+          activeProjects: activeprojects.length,
           totaltasks: gettask,
           totaltaskforproject: gettaskforproject,
           allTeams: getteams
@@ -72,6 +74,11 @@ export async function GET(req: Request) {
         { status: 200 },
       );
     }
+
+    return NextResponse.json(
+      { message: "No valid userId or projectId provided", getactivitys: [], teamNames: [], totalTeams: 0, totalProjects: [], activeProjects: 0, totaltasks: [], totaltaskforproject: [], allTeams: [] },
+      { status: 400 }
+    );
   } catch (error) {
     return NextResponse.json(
       { message: "failed to fetch activity", error },

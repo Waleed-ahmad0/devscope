@@ -2,7 +2,7 @@
 
 import CreateProject from "@/components/CreateProject";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 
 interface Task {
   _id?: string;
@@ -15,304 +15,397 @@ interface Task {
 }
 
 interface Project {
-  team: {
-    _id:string,
-    name:string
-  }
+  team: { _id: string; name: string };
   _id: string;
   name: string;
   description?: string;
-  status?: "Active" | "In Progress" | "Done";
+  status?: "Active" | "Done";
   progress?: number;
   taskCount: number;
   updatedAt: string;
   members: string[];
 }
 
+/* ── helpers ── */
+function projectColor(id: string) {
+  const palette = ["#2563eb","#7c3aed","#0891b2","#059669","#d97706","#dc2626","#db2777"];
+  let hash = 0;
+  for (const c of id) hash = c.charCodeAt(0) + ((hash << 5) - hash);
+  return palette[Math.abs(hash) % palette.length];
+}
+
+function projectInitials(name: string) {
+  return name.split(" ").slice(0, 2).map(w => w[0]).join("").toUpperCase() || "P";
+}
+
+function dateformat(date: string) {
+  return new Date(date).toLocaleDateString("en-US", {
+    month: "short", day: "numeric", year: "numeric",
+  });
+}
+
+function statusMeta(status?: Project["status"]) {
+  switch (status) {
+    case "Active": return { label:"Active", bg:"#dbeafe", color:"#1d4ed8", dot:"#3b82f6" };
+    case "Done":   return { label:"Done",   bg:"#dcfce7", color:"#166534", dot:"#22c55e" };
+    default:       return { label:"No Status", bg:"#f1f5f9", color:"#475569", dot:"#94a3b8" };
+  }
+}
+
+/* ── Skeleton ── */
+function SkeletonRow() {
+  return (
+    <div style={{ background:"#fff", border:"1.5px solid #e2e8f0", borderRadius:14, padding:"22px 24px", display:"flex", flexDirection:"column", gap:16 }}>
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+          <div style={shimmer(44,44,"12px")} />
+          <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+            <div style={shimmer(180,16,"6px")} />
+            <div style={shimmer(110,12,"6px")} />
+          </div>
+        </div>
+        <div style={shimmer(70,32,"8px")} />
+      </div>
+      <div style={{ display:"flex", alignItems:"center", gap:20 }}>
+        <div style={shimmer(80,13,"6px")} />
+        <div style={shimmer(140,13,"6px")} />
+      </div>
+      <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+        <div style={{ display:"flex", justifyContent:"space-between" }}>
+          <div style={shimmer(60,12,"6px")} />
+          <div style={shimmer(32,12,"6px")} />
+        </div>
+        <div style={{ height:7, borderRadius:999, background:"#e2e8f0", overflow:"hidden" }}>
+          <div style={{ ...shimmer("45%",7,"999px"), height:7 }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function shimmer(w: number|string, h: number, radius: string = "6px"): React.CSSProperties {
+  return {
+    width: typeof w === "number" ? w : w,
+    height: h,
+    borderRadius: radius,
+    background: "linear-gradient(90deg,#e2e8f0 25%,#f1f5f9 50%,#e2e8f0 75%)",
+    backgroundSize: "200% 100%",
+    animation: "pp-shimmer 1.4s ease infinite",
+    flexShrink: 0,
+  };
+}
+
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [createProject, setcreateProject] = useState<boolean>(false);
+  const [createProject, setcreateProject] = useState(false);
   const [progressMap, setProgressMap] = useState<Record<string, number>>({});
   const [totaltasks, settotaltasks] = useState<Record<string, number>>({});
+  const [loading, setLoading] = useState(true);
 
-  const getStatusColor = (status: Project["status"]) => {
-    switch (status) {
-      case "Active":
-        return "bg-blue-100 text-blue-700";
-      case "In Progress":
-        return "bg-yellow-100 text-yellow-700";
-      case "Done":
-        return "bg-green-100 text-green-700";
-      default:
-        return "bg-slate-100 dark:bg-slate-800 dark:bg-slate-800 text-slate-700 dark:text-slate-300 dark:text-slate-300";
-    }
-  };
-  const dateformat = (date: string) =>
-    new Date(date).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "numeric",
-      minute: "numeric",
-      second: "numeric",
-    });
+  /* filter state */
+  const [statusFilter, setStatusFilter] = useState<"All" | "Active" | "Done">("All");
+  const [teamFilter, setTeamFilter] = useState<string>("All");
+  const [teamDropdownOpen, setTeamDropdownOpen] = useState(false);
+
   useEffect(() => {
     const fetchProjects = async () => {
       const [projectsRes, tasksRes] = await Promise.all([
         fetch("/api/projects"),
         fetch("/api/tasks"),
       ]);
-      const data = await projectsRes.json();
-      // console.log(data)
+      const data: Project[] = await projectsRes.json();
       const allTasks: Task[] = await tasksRes.json();
-// console.log("data", data);
+
       const progressByProject: Record<string, number> = {};
       const ttaskbyproject: Record<string, number> = {};
       for (const project of data) {
-        const projectTasks = allTasks.filter(
-          (task: any) => task.project === project.name,
-        );
+        const projectTasks = allTasks.filter((task: any) => task.project === project.name);
         ttaskbyproject[project.name] = projectTasks.length;
-        if (projectTasks.length > 0) {
-          const completed = projectTasks.filter(
-            (task: any) => task.status === "completed",
-          ).length;
-          progressByProject[project.name] = Math.round(
-            (completed / projectTasks.length) * 100,
-          );
-        } else {
-          progressByProject[project.name] = 0;
-        }
+        progressByProject[project.name] = projectTasks.length > 0
+          ? Math.round((projectTasks.filter((t: any) => t.status === "completed").length / projectTasks.length) * 100)
+          : 0;
       }
       settotaltasks(ttaskbyproject);
       setProgressMap(progressByProject);
       setProjects(data);
-      setIsLoading(false);
+      setLoading(false);
     };
     fetchProjects();
   }, []);
-  
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 dark:bg-slate-950 p-8 transition-colors duration-200">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex justify-between items-start mb-8">
-            <div className="space-y-4">
-              <div className="h-8 w-48 skeleton"></div>
-              <div className="h-4 w-64 skeleton"></div>
-            </div>
-            <div className="h-10 w-32 skeleton"></div>
-          </div>
-          <div className="space-y-4">
-            <div className="h-32 w-full skeleton"></div>
-            <div className="h-32 w-full skeleton"></div>
-            <div className="h-32 w-full skeleton"></div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
-  if (projects.length === 0) {
-    return (
-      <div className="min-h-screen relative bg-slate-50 dark:bg-slate-950 dark:bg-slate-950">
-        <div className="p-8 max-w-7xl mx-auto">
-          {/* Empty State */}
-          <div className="flex flex-col items-center justify-center py-20">
-            <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
-              <svg
-                className="w-8 h-8 text-slate-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
-                />
-              </svg>
-            </div>
-            <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-50 dark:text-slate-50 mb-2">
-              No projects yet
-            </h2>
-            <p className="text-slate-600 dark:text-slate-400 dark:text-slate-400 mb-6">
-              Create your first project to get started
-            </p>
-            <button
-              onClick={() => {
-                setcreateProject(true);
-              }}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-            >
-              New Project
-            </button>
-          </div>
-          <CreateProject isOpen={createProject} setIsOpen={setcreateProject} />
-        </div>
-      </div>
-    );
-  }
+  /* unique teams for dropdown */
+  const uniqueTeams = useMemo(() => {
+    const names = Array.from(new Set(projects.map(p => p.team?.name).filter(Boolean)));
+    return names;
+  }, [projects]);
 
+  /* filtered projects */
+  const filtered = useMemo(() => {
+    return projects.filter(p => {
+      const matchStatus = statusFilter === "All" || p.status === statusFilter;
+      const matchTeam   = teamFilter === "All" || p.team?.name === teamFilter;
+      return matchStatus && matchTeam;
+    });
+  }, [projects, statusFilter, teamFilter]);
+
+  if (loading) {
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 dark:bg-slate-950">
-      <div className="p-8 max-w-7xl mx-auto">
-        {/* Header */}
+    <div className="font-['Plus_Jakarta_Sans',sans-serif] bg-slate-50 min-h-screen py-9 px-6">
+      <div className="max-w-[1000px] mx-auto">
         <div className="flex justify-between items-start mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-50 dark:text-slate-50 mb-2">Projects</h1>
-            <p className="text-slate-600 dark:text-slate-400 dark:text-slate-400">Track and manage all your projects</p>
+          <div className="flex flex-col gap-2.5">
+            <div style={shimmer(160, 32, "8px")} />
+            <div style={shimmer(220, 16, "6px")} />
           </div>
-          <button
-            onClick={() => {
-              setcreateProject(true);
-            }}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-          >
-            + New Project
-          </button>
+          <div style={shimmer(130, 42, "10px")} />
         </div>
-
-        {/* Filters */}
-        <div className="mb-6 flex flex-wrap gap-4 items-center">
-          <div className="flex gap-2">
-            <button className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium text-sm">
-              All Projects
-            </button>
-            <button className="px-4 py-2 bg-white dark:bg-slate-900 dark:bg-slate-900 text-slate-600 dark:text-slate-400 dark:text-slate-400 border border-slate-200 dark:border-slate-700 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:bg-slate-950 dark:bg-slate-950 transition-colors font-medium text-sm">
-              By Team ▾
-            </button>
-          </div>
-          <div className="flex gap-2 ml-auto">
-            <span className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 self-center mr-2">
-              Status:
-            </span>
-            <button className="px-3 py-1.5 bg-white dark:bg-slate-900 dark:bg-slate-900 text-slate-600 dark:text-slate-400 dark:text-slate-400 border border-slate-200 dark:border-slate-700 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:bg-slate-950 dark:bg-slate-950 transition-colors text-sm">
-              All
-            </button>
-            <button className="px-3 py-1.5 bg-white dark:bg-slate-900 dark:bg-slate-900 text-slate-600 dark:text-slate-400 dark:text-slate-400 border border-slate-200 dark:border-slate-700 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:bg-slate-950 dark:bg-slate-950 transition-colors text-sm">
-              Active
-            </button>
-            <button className="px-3 py-1.5 bg-white dark:bg-slate-900 dark:bg-slate-900 text-slate-600 dark:text-slate-400 dark:text-slate-400 border border-slate-200 dark:border-slate-700 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:bg-slate-950 dark:bg-slate-950 transition-colors text-sm">
-              Completed
-            </button>
-          </div>
-          <CreateProject isOpen={createProject} setIsOpen={setcreateProject} />
+        {/* filter bar skeleton */}
+        <div className="flex gap-2.5 mb-6">
+          {[120, 100, 80, 80, 80].map((w, i) => (
+            <div key={i} style={shimmer(w, 38, "9px")} />
+          ))}
         </div>
-        {/* Projects List */}
-        <div className="space-y-4">
-          {projects.map((project) => (
-            <Link
-              key={project.name}
-              href={`/dashboard/projects/${project._id}`}
-              className="block"
-            >
-              <div className="bg-white dark:bg-slate-900 dark:bg-slate-900 p-6 rounded-lg border border-slate-200 dark:border-slate-700 dark:border-slate-700 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50 dark:text-slate-50">
-                        {project.name}
-                      </h3>
-                      <span
-                        className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
-                          project.status,
-                        )}`}
-                      >
-                        {project.status}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400">
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                        />
-                      </svg>
-                      <span>Team: {project.team.name}</span>
-                    </div>
-                  </div>
-                  <button className="px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors font-medium text-sm">
-                    Open →
-                  </button>
-                </div>
-
-                <div className="flex items-center gap-6 mb-3">
-                  <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400">
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                      />
-                    </svg>
-                    <span>{totaltasks[project.name]} tasks</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400">
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    <span>Updated {dateformat(project.updatedAt)}</span>
-                  </div>
-                  {/* <div className="flex -space-x-2 ml-auto">
-                                        {project.members.map((member, idx) => (
-                                            <div
-                                                key={idx}
-                                                className="w-8 h-8 rounded-full bg-linear-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-xs font-medium border-2 border-white"
-                                            >
-                                                {member}
-                                            </div>
-                                        ))}
-                                    </div> */}
-                </div>
-
-                {/* Progress Bar */}
-                <div className="space-y-1">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-600 dark:text-slate-400 dark:text-slate-400">Progress</span>
-                    <span className="font-medium text-slate-900 dark:text-slate-50 dark:text-slate-50">
-                      {progressMap[project.name] ?? 0}%
-                    </span>
-                  </div>
-                  <div className="w-full bg-slate-200 dark:bg-slate-700 dark:bg-slate-700 rounded-full h-2">
-                    <div
-                      className="bg-blue-600 h-2 rounded-full transition-all"
-                      style={{
-                        width: `${progressMap[project.name] ?? 0}%`,
-                      }}
-                    ></div>
-                  </div>
-                </div>
-              </div>
-            </Link>
+        <div className="flex flex-col gap-3.5">
+          {[0, 1, 2, 3].map(i => (
+            <SkeletonRow key={i} />
           ))}
         </div>
       </div>
     </div>
   );
 }
+
+/* ── EMPTY STATE ── */
+if (projects.length === 0) {
+  return (
+    <>
+      <div className="font-['Plus_Jakarta_Sans',sans-serif] bg-slate-50 min-h-screen py-9 px-6">
+        <div className="max-w-[1000px] mx-auto animate-[pp-in_0.3s_ease]">
+          <div className="flex flex-col items-center justify-center py-20 px-6 bg-white border border-slate-200 rounded-2xl text-center">
+            <div className="w-[72px] h-[72px] bg-blue-50 rounded-full flex items-center justify-center mb-5">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+              </svg>
+            </div>
+            <h2 className="text-xl font-extrabold text-slate-900 mb-2">No projects yet</h2>
+            <p className="text-sm text-slate-500 mb-7">Create your first project to get started</p>
+            <button 
+              className="inline-flex items-center gap-2 font-['Plus_Jakarta_Sans',sans-serif] text-sm font-bold text-white bg-gradient-to-br from-blue-600 to-blue-700 border-none rounded-lg py-2.5 px-5 cursor-pointer shadow-[0_2px_10px_rgba(37,99,235,0.3)] transition-all duration-150 hover:from-blue-700 hover:to-blue-800 hover:shadow-[0_4px_16px_rgba(37,99,235,0.38)] hover:-translate-y-px"
+              onClick={() => setcreateProject(true)}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+              New Project
+            </button>
+          </div>
+        </div>
+        <CreateProject isOpen={createProject} setIsOpen={setcreateProject} />
+      </div>
+    </>
+  );
+}
+
+/* ── MAIN ── */
+return (
+  <>
+    <div className="font-['Plus_Jakarta_Sans',sans-serif] bg-slate-50 min-h-screen py-9 px-6" onClick={() => setTeamDropdownOpen(false)}>
+      <div className="max-w-[1000px] mx-auto animate-[pp-in_0.3s_ease]">
+
+        {/* HEADER */}
+        <div className="flex items-start justify-between gap-4 mb-7 flex-wrap">
+          <div>
+            <h1 className="text-[28px] font-extrabold text-slate-900 m-0 mb-1 tracking-tight">
+              Projects
+              {projects.length > 0 && (
+                <span className="inline-flex items-center text-xs font-bold text-blue-600 bg-blue-50 border border-blue-200 rounded-full py-0.5 px-2.5 ml-2.5 align-middle">
+                  {projects.length}
+                </span>
+              )}
+            </h1>
+            <p className="text-sm text-slate-500 m-0">Track and manage all your projects</p>
+          </div>
+          <button 
+            className="inline-flex items-center gap-2 font-['Plus_Jakarta_Sans',sans-serif] text-sm font-bold text-white bg-gradient-to-br from-blue-600 to-blue-700 border-none rounded-lg py-2.5 px-5 cursor-pointer shadow-[0_2px_10px_rgba(37,99,235,0.3)] transition-all duration-150 hover:from-blue-700 hover:to-blue-800 hover:shadow-[0_4px_16px_rgba(37,99,235,0.38)] hover:-translate-y-px"
+            onClick={() => setcreateProject(true)}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+            New Project
+          </button>
+        </div>
+
+        {/* FILTER BAR */}
+        <div className="flex items-center gap-2.5 mb-5 flex-wrap">
+          {/* status pills */}
+          <div className="flex gap-1.5 flex-wrap">
+            {(["All", "Active", "Done"] as const).map(s => (
+              <button
+                key={s}
+                className={`inline-flex items-center gap-1.5 font-['Plus_Jakarta_Sans',sans-serif] text-[13px] font-semibold text-slate-600 bg-white border-[1.5px] border-slate-200 rounded-lg py-1.5 px-3.5 cursor-pointer transition-all duration-150 whitespace-nowrap hover:border-blue-300 hover:text-blue-700 hover:bg-blue-50 ${statusFilter === s ? "bg-blue-50 border-blue-500 text-blue-700" : ""}`}
+                onClick={() => setStatusFilter(s)}
+              >
+                {s !== "All" && (
+                  <span style={{ width: 7, height: 7, borderRadius: "50%", background: statusMeta(s as Project["status"]).dot, display: "inline-block", flexShrink: 0 }} />
+                )}
+                {s}
+              </button>
+            ))}
+          </div>
+
+          {/* team dropdown */}
+          <div className="relative" onClick={e => e.stopPropagation()}>
+            <button
+              className={`inline-flex items-center gap-1.5 font-['Plus_Jakarta_Sans',sans-serif] text-[13px] font-semibold text-slate-600 bg-white border-[1.5px] border-slate-200 rounded-lg py-1.5 px-3.5 cursor-pointer transition-all duration-150 whitespace-nowrap hover:border-blue-300 hover:text-blue-700 hover:bg-blue-50 ${teamFilter !== "All" ? "bg-blue-50 border-blue-500 text-blue-700" : ""}`}
+              onClick={() => setTeamDropdownOpen(o => !o)}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+              {teamFilter === "All" ? "By Team" : teamFilter}
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="ml-0.5 transition-transform duration-150" style={{ transform: teamDropdownOpen ? "rotate(180deg)" : "rotate(0deg)" }}>
+                <path d="m6 9 6 6 6-6"/>
+              </svg>
+            </button>
+            {teamDropdownOpen && (
+              <div className="absolute top-full left-0 min-w-[180px] bg-white border-[1.5px] border-slate-200 rounded-xl shadow-[0_8px_28px_rgba(0,0,0,0.1)] z-[100] overflow-hidden animate-[pp-in_0.15s_ease]">
+                {["All", ...uniqueTeams].map(t => (
+                  <button
+                    key={t}
+                    className={`flex items-center justify-between w-full font-['Plus_Jakarta_Sans',sans-serif] text-[13.5px] font-medium text-slate-700 bg-transparent border-none py-2.5 px-3.5 cursor-pointer transition-colors duration-150 text-left hover:bg-slate-50 ${teamFilter === t ? "text-blue-600 font-bold bg-blue-50" : ""}`}
+                    onClick={() => { setTeamFilter(t); setTeamDropdownOpen(false); }}
+                  >
+                    {t === "All" ? "All Teams" : t}
+                    {teamFilter === t && (
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M20 6 9 17l-5-5"/>
+                      </svg>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* result count */}
+          {(statusFilter !== "All" || teamFilter !== "All") && (
+            <span className="text-[12.5px] text-slate-500 flex items-center gap-2 ml-1">
+              {filtered.length} result{filtered.length !== 1 ? "s" : ""}
+              <button 
+                className="font-['Plus_Jakarta_Sans',sans-serif] text-xs font-semibold text-red-600 bg-transparent border-none cursor-pointer p-0 hover:underline"
+                onClick={() => { setStatusFilter("All"); setTeamFilter("All"); }}
+              >
+                Clear ×
+              </button>
+            </span>
+          )}
+        </div>
+
+        {/* NO RESULTS */}
+        {filtered.length === 0 && (
+          <div className="flex flex-col items-center gap-2.5 py-16 text-slate-400">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+            <p className="text-sm m-0">No projects match your filters.</p>
+            <button 
+              className="font-['Plus_Jakarta_Sans',sans-serif] text-[13.5px] font-semibold text-blue-600 bg-transparent border-none cursor-pointer underline p-0"
+              onClick={() => { setStatusFilter("All"); setTeamFilter("All"); }}
+            >
+              Clear filters
+            </button>
+          </div>
+        )}
+
+        {/* PROJECT LIST */}
+        <div className="flex flex-col gap-3.5">
+          {filtered.map((project) => {
+            const color = projectColor(project._id);
+            const sm = statusMeta(project.status);
+            const prog = progressMap[project.name] ?? 0;
+            const tasks = totaltasks[project.name] ?? 0;
+
+            return (
+              <Link key={project._id} href={`/dashboard/projects/${project._id}`} className="block no-underline">
+                <div 
+                  className="bg-white border-[1.5px] border-slate-200 rounded-xl p-5 cursor-pointer transition-all duration-200 ease relative overflow-hidden hover:border-blue-200 hover:shadow-[0_6px_24px_rgba(37,99,235,0.1)] hover:-translate-y-px"
+                  style={{ "--pc": color } as React.CSSProperties}
+                >
+                  <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-[var(--pc,#2563eb)] opacity-0 transition-opacity duration-200 hover:opacity-100" />
+                  
+                  <div className="flex items-center justify-between gap-4 mb-4">
+                    <div className="flex items-center gap-3.5 flex-1 min-w-0">
+                      <div 
+                        className="w-11 h-11 rounded-xl flex items-center justify-center text-sm font-extrabold text-white flex-shrink-0 tracking-tight"
+                        style={{ background: color }}
+                      >
+                        {projectInitials(project.name)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2.5 mb-1.5 flex-wrap">
+                          <h3 className="text-[15.5px] font-bold text-slate-900 m-0 whitespace-nowrap overflow-hidden text-ellipsis">
+                            {project.name}
+                          </h3>
+                          <span
+                            className="inline-flex items-center gap-1.5 text-[11.5px] font-bold rounded-full py-0.5 px-2.5 whitespace-nowrap"
+                            style={{ background: sm.bg, color: sm.color }}
+                          >
+                            <span style={{ width: 6, height: 6, borderRadius: "50%", background: sm.dot, display: "inline-block", flexShrink: 0 }} />
+                            {sm.label}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-500">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                            </svg>
+                            {project.team?.name ?? "No team"}
+                          </span>
+                          <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-500">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                            </svg>
+                            {tasks} {tasks === 1 ? "task" : "tasks"}
+                          </span>
+                          <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-500">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                            </svg>
+                            Updated {dateformat(project.updatedAt)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* right: open arrow */}
+                    <div className="flex items-center justify-center w-[34px] h-[34px] rounded-lg border-[1.5px] border-slate-200 text-slate-400 flex-shrink-0 transition-all duration-[0.15s] group-hover:bg-blue-50 group-hover:border-blue-200 group-hover:text-blue-600">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M9 5l7 7-7 7"/>
+                      </svg>
+                    </div>
+                  </div>
+
+                  {/* progress */}
+                  <div className="flex flex-col gap-1">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-medium text-slate-400">Progress</span>
+                      <span className="text-xs font-bold" style={{ color }}>{prog}%</span>
+                    </div>
+                    <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full rounded-full transition-all duration-300"
+                        style={{ width: `${prog}%`, background: color }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+
+      </div>
+    </div>
+
+    <CreateProject isOpen={createProject} setIsOpen={setcreateProject} />
+  </>
+);
+} 
