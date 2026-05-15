@@ -5,7 +5,6 @@ const nextConfig: NextConfig = {
     domains: [
       'avatars.githubusercontent.com', 
       'lh3.googleusercontent.com',   
-      'platform-lookaside.fbsbx.com', 
       'cdn.discordapp.com',          
     ],
   },

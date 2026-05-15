@@ -79,6 +79,8 @@ export default function ProjectDetailPage({
   const [projectName, setProjectName] = useState("");
   const [projectStatus, setProjectStatus] = useState<string>("");
   const [showTaskForm, setShowTaskForm] = useState(false);
+  const [perror, setperror] = useState(false)
+  const [terror, setterror] = useState(false)
   const [taskForm, setTaskForm] = useState({
     title: "",
     description: "",
@@ -267,6 +269,12 @@ export default function ProjectDetailPage({
         const gettasks = await fetch(`/api/tasks/${id}`);
         if (!request.ok) {
           setproject(null);
+          setperror(true);
+          setProjectLoading(false);
+          return;
+        }
+        if (!gettasks.ok) {
+          setterror(true);
           return;
         }
         const response = await request.json();
@@ -289,7 +297,6 @@ export default function ProjectDetailPage({
   if (isNotFound) {
     notFound();
   }
-  const deleteteam = async () => {};
   const handleStatusChange = async (
     taskId: string,
     newStatus: "pending" | "in progress" | "completed",
@@ -325,7 +332,62 @@ export default function ProjectDetailPage({
       settasks(previousTasks);
     }
   };
+if (perror) {
+    return (
+      <div className="h-full bg-slate-50 flex items-center justify-center p-6">
+        <div className="bg-white border border-red-100 rounded-2xl p-10 max-w-md w-full text-center shadow-[0_4px_24px_rgba(220,38,38,0.07)]">
+          <div className="w-16 h-16 rounded-2xl bg-red-50 flex items-center justify-center mx-auto mb-5">
+            <svg
+              width="30"
+              height="30"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#dc2626"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+            </svg>
+          </div>
 
+          <h2 className="text-[20px] font-extrabold text-slate-900 mb-2 tracking-tight">
+            Failed to load dashboard
+          </h2>
+          <p className="text-sm text-slate-500 mb-1 leading-relaxed">
+            We couldn&apos;t fetch your dashboard data. This might be a
+            temporary issue.
+          </p>
+
+          <div className="flex flex-col gap-2.5">
+            <button
+              onClick={() => {
+                setperror(false);
+                window.location.reload();
+              }}
+              className="inline-flex items-center justify-center gap-2 w-full font-bold text-sm rounded-[10px] px-5 py-[10px] cursor-pointer transition-all duration-150 text-white border-none shadow-[0_2px_8px_rgba(37,99,235,0.3)] hover:-translate-y-px hover:shadow-[0_4px_14px_rgba(37,99,235,0.4)]"
+              style={{ background: "linear-gradient(135deg,#2563eb,#1d4ed8)" }}
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M23 4v6h-6M1 20v-6h6" />
+                <path d="M3.51 9a9 9 0 0114.13-3.36L23 10M1 14l5.36 4.36A9 9 0 0020.49 15" />
+              </svg>
+              Try again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
   const getDueDateInfo = (
     dueDate: Date | undefined | null,
     status: Task["status"],

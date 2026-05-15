@@ -95,6 +95,7 @@ export default function AccountProfile() {
   const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
   const [deleteConfirmInput, setDeleteConfirmInput] = useState<string>("");
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
+  const [error, seterror] = useState<boolean>(false);
 
   useEffect(() => {
     if (status === "loading") return;
@@ -109,14 +110,20 @@ export default function AccountProfile() {
     try {
       setIsLoading(true);
       const response = await fetch("/api/user");
-      if (!response.ok) throw new Error("Failed to fetch profile data");
+      if (!response.ok) {
+        seterror(true);
+        throw new Error("Failed to fetch profile data");
+      }
       const userData = await response.json();
       if (!userData) {
+        seterror(true);
         setUser(undefined);
         return;
       }
+      seterror(false);
       setUser(userData);
     } catch (error) {
+      seterror(true);
       console.error("Error fetching profile:", error);
     } finally {
       setIsLoading(false);
@@ -131,7 +138,61 @@ export default function AccountProfile() {
       day: "numeric",
     });
   };
+  if (error) {
+    return (
+      <div className="h-full bg-slate-50 flex items-center justify-center p-6">
+        <div className="bg-white border border-red-100 rounded-2xl p-10 max-w-md w-full text-center shadow-[0_4px_24px_rgba(220,38,38,0.07)]">
+          <div className="w-16 h-16 rounded-2xl bg-red-50 flex items-center justify-center mx-auto mb-5">
+            <svg
+              width="30"
+              height="30"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#dc2626"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+            </svg>
+          </div>
 
+          <h2 className="text-[20px] font-extrabold text-slate-900 mb-2 tracking-tight">
+            Failed to load profile
+          </h2>
+          <p className="text-sm text-slate-500 mb-1 leading-relaxed">
+            We couldn&apos;t fetch your profile data. This might be a temporary
+            issue.
+          </p>
+
+          <div className="flex flex-col gap-2.5">
+            <button
+              onClick={() => {
+                window.location.reload();
+              }}
+              className="inline-flex items-center justify-center gap-2 w-full font-bold text-sm rounded-[10px] px-5 py-[10px] cursor-pointer transition-all duration-150 text-white border-none shadow-[0_2px_8px_rgba(37,99,235,0.3)] hover:-translate-y-px hover:shadow-[0_4px_14px_rgba(37,99,235,0.4)]"
+              style={{ background: "linear-gradient(135deg,#2563eb,#1d4ed8)" }}
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M23 4v6h-6M1 20v-6h6" />
+                <path d="M3.51 9a9 9 0 0114.13-3.36L23 10M1 14l5.36 4.36A9 9 0 0020.49 15" />
+              </svg>
+              Try again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
   const handleLogout = async () => {
     try {
       await signOut({ redirect: true, callbackUrl: "/" });
@@ -450,7 +511,6 @@ export default function AccountProfile() {
                 </div>
               </div>
 
-              {/* Navigation - Horizontal on mobile, vertical on larger screens */}
               <nav className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-slate-200 p-3 sm:p-4 lg:p-6">
                 <h3 className="text-xs sm:text-sm font-semibold text-slate-900 mb-2 sm:mb-3 lg:mb-4 uppercase tracking-wide">
                   Navigation

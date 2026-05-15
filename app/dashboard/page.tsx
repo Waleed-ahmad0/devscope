@@ -1,5 +1,5 @@
 "use client";
-import { useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import CreateProject from "@/components/CreateProject";
@@ -50,6 +50,7 @@ export default function DashboardPage() {
   const [totalprojects, settotalprojects] = useState<number>(0);
   const [projecttasks, setprojecttasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   const { data: session, status } = useSession();
 
   useEffect(() => {
@@ -57,7 +58,13 @@ export default function DashboardPage() {
       const getactivityfunc = async () => {
         try {
           const requestact = await fetch(`/api/activity?userId=${session.user.id}`);
+          if (!requestact.ok) {
+            throw new Error(`Server error: ${requestact.status} ${requestact.statusText}`);
+          }
           const data = await requestact.json();
+          if (data.error) {
+            throw new Error(data.error);
+          }
           setActivities(data.getactivitys);
           setteamnames(data.teamNames);
           settotalteams(data.totalTeams);
@@ -65,8 +72,9 @@ export default function DashboardPage() {
           setprojects(data.totalProjects);
           settotaltask(data.totaltasks);
           setprojecttasks(data.totaltaskforproject);
-        } catch (error) {
+        } catch (error: any) {
           console.error("Error fetching dashboard data:", error);
+          setError(error?.message || "Something went wrong while loading your dashboard.");
         } finally {
           setLoading(false);
         }
@@ -169,14 +177,55 @@ export default function DashboardPage() {
     );
   }
 
+  if (error) {
+    return (
+      <div className="h-full bg-slate-50 flex items-center justify-center p-6">
+        <div className="bg-white border border-red-100 rounded-2xl p-10 max-w-md w-full text-center shadow-[0_4px_24px_rgba(220,38,38,0.07)]">
+          <div className="w-16 h-16 rounded-2xl bg-red-50 flex items-center justify-center mx-auto mb-5">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+            </svg>
+          </div>
+
+          <h2 className="text-[20px] font-extrabold text-slate-900 mb-2 tracking-tight">
+            Failed to load dashboard
+          </h2>
+          <p className="text-sm text-slate-500 mb-1 leading-relaxed">
+            We couldn&apos;t fetch your dashboard data. This might be a temporary issue.
+          </p>
+         
+
+          <div className="flex flex-col gap-2.5">
+            <button
+              onClick={() => {
+                setError(null);
+                setLoading(true);
+                window.location.reload();
+              }}
+              className="inline-flex items-center justify-center gap-2 w-full font-bold text-sm rounded-[10px] px-5 py-[10px] cursor-pointer transition-all duration-150 text-white border-none shadow-[0_2px_8px_rgba(37,99,235,0.3)] hover:-translate-y-px hover:shadow-[0_4px_14px_rgba(37,99,235,0.4)]"
+              style={{ background: 'linear-gradient(135deg,#2563eb,#1d4ed8)' }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.13-3.36L23 10M1 14l5.36 4.36A9 9 0 0020.49 15"/>
+              </svg>
+              Try again
+            </button>
+  
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
    <div className="h-auto bg-slate-50 overflow-hidden grid gap-[18px] p-6 px-7 animate-fade-in-up" style={{ gridTemplateRows: 'auto auto 1fr' }}>
 
-      {/* ── HEADER ── */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-[26px] font-extrabold text-slate-900 tracking-tight mb-[3px]">
             Good morning, <span className="text-blue-600">{session?.user?.name || session?.user?.firstName}</span> 👋
+        <div onClick={() => { signOut() }}>heelfdsaaaaaao</div>
+
           </h1>
           <p className="text-sm text-slate-500 m-0">Here's what's happening with your projects today.</p>
         </div>
@@ -205,9 +254,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* ── STAT CARDS ── */}
       <div className="grid grid-cols-3 gap-3.5">
-        {/* Teams */}
         <div className="bg-white border border-slate-200 rounded-[14px] p-[18px_20px] flex items-center gap-4 transition-all duration-[180ms] hover:shadow-[0_4px_18px_rgba(37,99,235,0.1)] hover:-translate-y-0.5">
           <div className="w-[46px] h-[46px] rounded-[12px] flex items-center justify-center shrink-0 bg-blue-50">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -221,7 +268,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Projects */}
         <div className="bg-white border border-slate-200 rounded-[14px] p-[18px_20px] flex items-center gap-4 transition-all duration-[180ms] hover:shadow-[0_4px_18px_rgba(37,99,235,0.1)] hover:-translate-y-0.5">
           <div className="w-[46px] h-[46px] rounded-[12px] flex items-center justify-center shrink-0 bg-green-50">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -235,7 +281,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Tasks */}
         <div className="bg-white border border-slate-200 rounded-[14px] p-[18px_20px] flex items-center gap-4 transition-all duration-[180ms] hover:shadow-[0_4px_18px_rgba(37,99,235,0.1)] hover:-translate-y-0.5">
           <div className="w-[46px] h-[46px] rounded-[12px] flex items-center justify-center shrink-0 bg-yellow-50">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ca8a04" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -253,10 +298,8 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* ── MAIN GRID ── */}
       <div className="grid gap-3.5 min-h-0" style={{ gridTemplateColumns: '1fr 1fr 290px' }}>
 
-        {/* COL 1 — Recent Projects */}
         <div className="bg-white border border-slate-200 rounded-[14px] flex flex-col overflow-hidden min-h-0">
           <div className="px-[18px] py-3.5 border-b border-slate-50 flex items-center justify-between shrink-0">
             <span className="text-[15px] font-bold text-slate-900">Recent Projects</span>
@@ -294,7 +337,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* COL 2 — Upcoming Tasks */}
         <div className="bg-white border border-slate-200 rounded-[14px] flex flex-col overflow-hidden min-h-0">
           <div className="px-[18px] py-3.5 border-b border-slate-50 flex items-center justify-between shrink-0">
             <span className="text-[15px] font-bold text-slate-900">Upcoming Tasks</span>
