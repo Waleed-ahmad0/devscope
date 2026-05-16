@@ -47,11 +47,11 @@ export async function PATCH(
     await dbConnect();
     const { id } = await params;
     const body = await req.json();
-    // 
+    //
 
     if (body.newOwner) {
       const oldowner = await Team.findById(id);
-      // 
+      //
       const user = await User.findOne({ email: body.newOwner });
       if (!user) {
         throw new Error("user not found");
@@ -76,7 +76,7 @@ export async function PATCH(
         userName: (session?.user?.name || session?.user?.firstName)?.trim(),
         teamId: new mongoose.Types.ObjectId(id),
         projectId: new mongoose.Types.ObjectId(body.projectId),
-        action: `Changed owner to ${(user.firstName || user.name)?.trim()}`,
+        action: `Changed owner to :"${(user.firstName || user.name)?.trim()}"`,
         createdAt: new Date(),
       };
       await activity.create(createactivity);
@@ -84,23 +84,23 @@ export async function PATCH(
     }
 
     const membersData = await Promise.all(
-  body.members.map(async (member: members) => {
-    const user = await User.findOne({ email: member.user });
+      body.members.map(async (member: members) => {
+        const user = await User.findOne({ email: member.user });
 
-    if (!user) {
-      throw new Error(`User not found: ${member.user}`);
-    }
+        if (!user) {
+          throw new Error(`User not found: ${member.user}`);
+        }
 
-    return {
-      user: user._id,
-      role: member.role,
-      name: user.firstName || user.name,
-    };
-  }),
-);
+        return {
+          user: user._id,
+          role: member.role,
+          name: user.firstName || user.name,
+        };
+      }),
+    );
 
-const members = membersData.map(m => ({ user: m.user, role: m.role }));
-const membersname = membersData.map(m => m.name);
+    const members = membersData.map((m) => ({ user: m.user, role: m.role }));
+    const membersname = membersData.map((m) => m.name);
     const team = await Team.findByIdAndUpdate(
       id,
       { $push: { members: { $each: members } } },
@@ -111,11 +111,11 @@ const membersname = membersData.map(m => m.name);
       userId: new mongoose.Types.ObjectId(session?.user?.id),
       teamId: new mongoose.Types.ObjectId(id),
       projectId: new mongoose.Types.ObjectId(body.projectId),
-      action: `Added member ${membersname.join(", ")}`,
+      action: `Added member :"${membersname.join(", ")}"`,
       createdAt: new Date(),
     };
     await activity.create(createactivity);
-    // 
+    //
     return NextResponse.json(team, { status: 200 });
   } catch (error) {
     return NextResponse.json({ error }, { status: 500 });
@@ -132,13 +132,13 @@ export async function DELETE(
     await dbConnect();
     const { id } = await params;
     const body = await req.json();
-    // 
+    //
 
     const members = await Promise.all(
       body.selected.map(async (member: selectedmembers) => {
-        // 
+        //
         const user = await User.findOne({ email: member.user.email });
-        // 
+        //
         if (!user) {
           throw new Error(`User not found: ${member.user}`);
         }
@@ -148,24 +148,24 @@ export async function DELETE(
         };
       }),
     );
-    // 
+    //
     const userIds = members.map(
       (m) => new mongoose.Types.ObjectId(m.user as string),
     );
-    // 
+    //
     const team = await Team.findByIdAndUpdate(
       id,
       { $pull: { members: { user: { $in: userIds } } } },
       { new: true, runValidators: true },
     );
-    // 
+    //
     await Task.deleteMany({ assignedTo: { $in: userIds } });
     const createactivity = {
       userName: session?.user?.name || session?.user?.firstName,
       userId: new mongoose.Types.ObjectId(session?.user?.id),
       teamId: new mongoose.Types.ObjectId(id),
       projectId: new mongoose.Types.ObjectId(body.projectId),
-      action: `Removed member ${body.selected}`,
+      action: `Removed member: "${body.selected}"`,
       createdAt: new Date(),
     };
     await activity.create(createactivity);

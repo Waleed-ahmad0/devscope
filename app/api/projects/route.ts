@@ -15,9 +15,9 @@ interface getbody {
 interface dbdata {
   name: string;
   description: string;
-  userId?: string;
+  userId: mongoose.Types.ObjectId;
   status: string;
-  team: string;
+  team: mongoose.Types.ObjectId;
 }
 
 export async function GET(req: Request) {
@@ -36,7 +36,7 @@ export async function GET(req: Request) {
       "team",
       "name",
     );
-    // 
+    //
 
     return NextResponse.json(projects, { status: 200 });
   } catch (error) {
@@ -57,20 +57,19 @@ export async function POST(req: Request) {
     const final_data: dbdata = {
       name: body.name,
       description: body.description,
-      userId: session?.user?.id,
+      userId: new mongoose.Types.ObjectId(session?.user?.id),
       status: "Active",
-      team: body.team,
+      team: new mongoose.Types.ObjectId(body.team),
     };
     const senddata = await Project.create(final_data);
-    // 
     const createactivity = {
+      projectId: new mongoose.Types.ObjectId(senddata._id),
       userName: (session?.user?.name || session?.user?.firstName)?.trim(),
       userId: new mongoose.Types.ObjectId(session?.user?.id),
-      team: new mongoose.Types.ObjectId(body.team),
-      action: `Created project ${(body.name)?.trim()}`,
+      teamId: new mongoose.Types.ObjectId(body.team),
+      action: `Created project :"${body.name?.trim()}"`,
       createdAt: new Date(),
     };
-    // 
     await activity.create(createactivity);
     return NextResponse.json(senddata, { status: 200 });
   } catch (error) {
@@ -95,10 +94,10 @@ export async function PATCH(req: Request) {
       userName: (session?.user?.name || session?.user?.firstName)?.trim(),
       teamId: new mongoose.Types.ObjectId(project.team),
       projectId: new mongoose.Types.ObjectId(project._id),
-      action: `Updated project ${(project.name)?.trim()}`,
+      action: `Updated project :"${project.name?.trim()}"`,
       createdAt: new Date(),
     };
-    // 
+    //
     await activity.create(createactivity);
   }
   return NextResponse.json({ message: "success" });

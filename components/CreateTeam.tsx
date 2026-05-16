@@ -9,9 +9,11 @@ interface MemberInput {
 export default function CreateTeam({
   isOpen,
   setIsOpen,
+onSuccess
 }: {
   isOpen: boolean;
   setIsOpen: (value: boolean) => void;
+  onSuccess?: () => void;
 }) {
   const {data} = useSession();
   const owneremail= data?.user?.email 
@@ -78,6 +80,7 @@ export default function CreateTeam({
       });
       const data = await res.json();
       if (res.ok) {
+        onSuccess?.()
         setName("");
         setMembers([]);
         setIsOpen(false);

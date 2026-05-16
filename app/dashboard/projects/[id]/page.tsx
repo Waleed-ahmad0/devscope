@@ -1,4 +1,5 @@
 "use client";
+import { Divide } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { notFound } from "next/navigation";
 import { useRouter } from "next/navigation";
@@ -25,7 +26,7 @@ interface ProjectDetail {
   name: string;
   description?: string;
   team: Team;
-  status: "Active" | "In Progress" | "Done";
+  status: "Active" | "Completed";
   createdAt?: string;
 }
 
@@ -35,7 +36,7 @@ interface Task {
   description: string;
   status: "pending" | "in progress" | "completed";
   projectid: string;
-  createdby: string;
+  createdBy: string;
   Duedate: Date;
   assignedTo?: string;
   assignedUser?: string;
@@ -78,9 +79,15 @@ export default function ProjectDetailPage({
   const [tasks, settasks] = useState<Task[]>([]);
   const [projectName, setProjectName] = useState("");
   const [projectStatus, setProjectStatus] = useState<string>("");
-  const [showTaskForm, setShowTaskForm] = useState(false);
-  const [perror, setperror] = useState(false)
-  const [terror, setterror] = useState(false)
+  const [showTaskForm, setShowTaskForm] = useState<boolean>(false);
+  const [perror, setperror] = useState<boolean>(false);
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
+  const [deleteid, setdeleteid] = useState<string>("");
+  const [ShowDeleteModal, setShowDeleteModal] = useState<boolean>(false);
+  const [terror, setterror] = useState<boolean>(false);
+  const [deleteConfirmInput, setDeleteConfirmInput] = useState<string>("");
+  const [deleteprojectb, setdeleteprojectb] = useState<boolean>(false);
+
   const [taskForm, setTaskForm] = useState({
     title: "",
     description: "",
@@ -130,19 +137,30 @@ export default function ProjectDetailPage({
   const changeprojetdata = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    try {
-      if (projectName === "") {
-      }
-      const res = await fetch(`/api/projects/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: projectName, status: projectStatus }),
-      });
-      const updated = await res.json();
-      setrefresh((prev) => !prev);
-    } catch (error) {
-      console.error("Failed to update project:", error);
+    // Option 1: Simple and clean
+    const updatePayload: Partial<{ name: string; status: string }> = {};
+
+    if (project?.name !== projectName) {
+      updatePayload.name = projectName;
     }
+    if (project?.status !== projectStatus) {
+      updatePayload.status = projectStatus;
+    }
+
+    if (Object.keys(updatePayload).length > 0) {
+      try {
+        const res = await fetch(`/api/projects/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updatePayload),
+        });
+        const updated = await res.json();
+        // Handle the updated data here
+      } catch (error) {
+        console.error("Failed to update project:", error);
+      }
+    }
+    setrefresh((prev) => !prev);
   };
   const getActivityIcon = (action: string) => {
     const lower = action.toLowerCase();
@@ -198,9 +216,7 @@ export default function ProjectDetailPage({
     switch (status) {
       case "Active":
         return "bg-blue-100 text-blue-700";
-      case "In Progress":
-        return "bg-yellow-100 text-yellow-700";
-      case "Done":
+      case "Completed":
         return "bg-green-100 text-green-700";
       default:
         return "bg-slate-100 text-slate-700";
@@ -219,7 +235,6 @@ export default function ProjectDetailPage({
     try {
       if (taskForm.assignedTo === "") {
         const { assignedTo, ...rest } = taskForm;
-
         setShowTaskForm(false);
       } else {
         const res = await fetch(`/api/tasks/${id}`, {
@@ -253,10 +268,29 @@ export default function ProjectDetailPage({
       const res = await fetch(`/api/projects/${id}`, {
         method: "DELETE",
       });
-      const deleted = await res.json();
-      // setrefresh((prev) => !prev);
-
-      router.replace("/dashboard/projects");
+      await res.json();
+      setShowDeleteModal(false);
+      setDeleteConfirmInput("");
+      if (res.ok) {
+        router.replace("/dashboard/projects");
+      }
+    } catch (error) {
+      console.error("Failed to delete project:", error);
+    }
+  };
+  const deletetask = async (id: string) => {
+    if (!id) {
+      setterror(true);
+      return;
+    }
+    try {
+      const res = await fetch(`/api/tasks/${id}`, {
+        method: "DELETE",
+      });
+      await res.json();
+      setrefresh((prev) => !prev);
+      setShowDeleteModal(false);
+      setDeleteConfirmInput("");
     } catch (error) {
       console.error("Failed to delete project:", error);
     }
@@ -279,7 +313,9 @@ export default function ProjectDetailPage({
         }
         const response = await request.json();
         const tasksData = await gettasks.json();
-        const comptask = tasksData.filter((item: any) => item.status === "completed");
+        const comptask = tasksData.filter(
+          (item: any) => item.status === "completed",
+        );
         setprogress((comptask.length / (tasksData.length || 1)) * 100);
         settasks(tasksData);
         setproject(response.data);
@@ -332,7 +368,7 @@ export default function ProjectDetailPage({
       settasks(previousTasks);
     }
   };
-if (perror) {
+  if (perror) {
     return (
       <div className="h-full bg-slate-50 flex items-center justify-center p-6">
         <div className="bg-white border border-red-100 rounded-2xl p-10 max-w-md w-full text-center shadow-[0_4px_24px_rgba(220,38,38,0.07)]">
@@ -495,7 +531,7 @@ if (perror) {
           setDraggedTaskId(null);
           setDragOverColumn(null);
         }}
-        className={`bg-white rounded-xl border p-4 shadow-sm hover:shadow-md transition-all duration-200 cursor-grab active:cursor-grabbing ${
+        className={`relative bg-white rounded-xl border p-4 shadow-sm hover:shadow-md transition-all duration-200 cursor-grab active:cursor-grabbing ${
           draggedTaskId === task._id
             ? "opacity-40 scale-[0.97] shadow-lg ring-2 ring-blue-400"
             : ""
@@ -505,8 +541,35 @@ if (perror) {
             : "border-slate-200"
         }`}
       >
+        {session?.user?.id === task.createdBy ||
+          (session?.user?.id === project?.team.ownerId._id && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setdeleteid(task._id!);
+                setShowDeleteModal(true);
+              }}
+              className="absolute top-3 right-3 p-1 rounded-md text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all duration-150"
+              title="Delete task"
+            >
+              <svg
+                className="w-3.5 h-3.5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="2.5"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          ))}
+
         {/* Status badge + Overdue badge */}
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2 mb-3 pr-6">
           <span
             className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${statusColors[task.status]}`}
           >
@@ -566,8 +629,10 @@ if (perror) {
               ? `${dueDateInfo.label} · ${dueDateInfo.rawDate}`
               : dueDateInfo.rawDate}
           </span>
-          <div>{task.assignedUser ? task.assignedUser : "open"}</div>
-          <span className="flex items-center gap-1">
+          <div>
+            <b>assignedTo</b>: {task.assignedUser ? task.assignedUser : "open"}
+          </div>
+          <div className="flex items-center gap-1">
             <svg
               className="w-3.5 h-3.5"
               fill="none"
@@ -581,9 +646,12 @@ if (perror) {
                 d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
               />
             </svg>
-            {task.createdby || "Unassigned"}
-          </span>
+            <div>
+              <b>created by</b>: {task.createdBy}
+            </div>
+          </div>
         </div>
+
         {/* Divider */}
         <div className="border-t border-slate-100 pt-3">
           <select
@@ -595,7 +663,7 @@ if (perror) {
                 task.title,
               )
             }
-            className={` w-full px-3 py-1.5 text-xs font-medium bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer hover:bg-slate-100 transition-colors`}
+            className="w-full px-3 py-1.5 text-xs font-medium bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer hover:bg-slate-100 transition-colors"
           >
             <option value="pending">📋 Move to To Do</option>
             <option value="in progress">🔄 Move to In Progress</option>
@@ -911,7 +979,7 @@ if (perror) {
                     <option value="due-date-desc">Due Date (Latest)</option>
                     <option value="newest">Newest First</option>
                     <option value="oldest">Oldest First</option>
-                    <option value="alphabetical">Alphabetical (A–Z)</option>
+                    <option value="alphabetical">Alphabetical (A-Z)</option>
                   </select>
                 </div>
 
@@ -921,7 +989,12 @@ if (perror) {
                     {tasks.length} total
                   </span>
                   <span className="text-xs font-semibold bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full">
-                    {tasks.filter((t) => t.status === "in progress").length}{" "}
+                    {
+                      tasks.filter(
+                        (t) =>
+                          t.status === "in progress" || t.status === "pending",
+                      ).length
+                    }{" "}
                     active
                   </span>
                   <span className="text-xs font-semibold bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full">
@@ -1296,7 +1369,7 @@ if (perror) {
                           day: "numeric",
                           year: "numeric",
                         });
-                        
+
                         const iconInfo = getActivityIcon(act.action);
 
                         return (
@@ -1338,9 +1411,11 @@ if (perror) {
                                     </p>
                                   </div>
                                   {/* Avatar */}
-                                  {act?.userName && <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-[10px] font-bold shrink-0 shadow-sm">
-                                    {act.userName[0].toUpperCase()}
-                                  </div>}
+                                  {act?.userName && (
+                                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-[10px] font-bold shrink-0 shadow-sm">
+                                      {act.userName[0].toUpperCase()}
+                                    </div>
+                                  )}
                                 </div>
                                 {/* Timestamp */}
                                 <div className="flex items-center gap-1.5 mt-1.5">
@@ -1436,7 +1511,10 @@ if (perror) {
                   certain.
                 </p>
                 <button
-                  onClick={deleteproject}
+                  onClick={() => {
+                    setShowDeleteModal(true);
+                    setdeleteprojectb(true);
+                  }}
                   className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
                 >
                   Delete Project
@@ -1449,7 +1527,15 @@ if (perror) {
     }
   };
 
-  function SkeletonBox({ w = "100%", h = "16px", radius = "6px" }: { w?: string; h?: string; radius?: string }) {
+  function SkeletonBox({
+    w = "100%",
+    h = "16px",
+    radius = "6px",
+  }: {
+    w?: string;
+    h?: string;
+    radius?: string;
+  }) {
     return (
       <div
         className="animate-pulse bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 bg-[length:200%_100%]"
@@ -1472,7 +1558,9 @@ if (perror) {
             </div>
           </div>
           <div className="mb-8 border-b border-slate-200 flex gap-8">
-            {[0, 1, 2, 3].map(i => <SkeletonBox key={i} w="80px" h="30px" radius="4px" />)}
+            {[0, 1, 2, 3].map((i) => (
+              <SkeletonBox key={i} w="80px" h="30px" radius="4px" />
+            ))}
           </div>
           <div className="space-y-6">
             <div className="bg-white p-6 rounded-lg border border-slate-200">
@@ -1483,8 +1571,11 @@ if (perror) {
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[0, 1, 2, 3].map(i => (
-                <div key={i} className="bg-white p-6 rounded-lg border border-slate-200">
+              {[0, 1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="bg-white p-6 rounded-lg border border-slate-200"
+                >
                   <div className="flex items-center gap-3 mb-3">
                     <SkeletonBox w="40px" h="40px" radius="8px" />
                     <SkeletonBox w="80px" h="16px" radius="4px" />
@@ -1504,13 +1595,31 @@ if (perror) {
       <div className="bg-slate-50 min-h-screen flex items-center justify-center">
         <div className="text-center p-8">
           <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            <svg
+              className="w-8 h-8 text-slate-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-slate-900 mb-2">Project Not Found</h2>
-          <p className="text-slate-500 mb-6">The project you're looking for doesn't exist or you don't have access to it.</p>
-          <button onClick={() => router.push('/dashboard/projects')} className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">
+            Project Not Found
+          </h2>
+          <p className="text-slate-500 mb-6">
+            The project you're looking for doesn't exist or you don't have
+            access to it.
+          </p>
+          <button
+            onClick={() => router.push("/dashboard/projects")}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+          >
             Go back to projects
           </button>
         </div>
@@ -1581,6 +1690,94 @@ if (perror) {
 
         {/* Tab Content */}
         {renderTabContent()}
+        {ShowDeleteModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-lg">
+              <div className="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full mb-4">
+                <svg
+                  className="w-6 h-6 text-red-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4v2m0 0v2m0-2h2m0 0h2m-2 0h-2"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-slate-900 text-center mb-2">
+                Delete
+              </h3>
+              <p className="text-slate-600 text-sm text-center mb-6">
+                This action cannot be undone. All your data will be permanently
+                deleted.
+              </p>
+
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Type &quot;delete&quot; to confirm
+                </label>
+                <input
+                  type="text"
+                  value={deleteConfirmInput}
+                  onChange={(e) => setDeleteConfirmInput(e.target.value)}
+                  placeholder="Type 'delete' here"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setDeleteConfirmInput("");
+                  }}
+                  disabled={isDeleting}
+                  className="flex-1 px-4 py-2 bg-slate-100 text-slate-700 font-medium rounded-lg hover:bg-slate-200 transition-colors duration-200 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                {deleteprojectb ? (
+                  <button
+                    onClick={deleteproject}
+                    disabled={
+                      isDeleting ||
+                      deleteConfirmInput.toLowerCase() !== "delete"
+                    }
+                    className="flex-1 px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isDeleting ? "Deleting..." : "Delete Account"}
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => deletetask(deleteid)}
+                    disabled={
+                      isDeleting ||
+                      deleteConfirmInput.toLowerCase() !== "delete"
+                    }
+                    className="flex-1 px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isDeleting ? "Deleting..." : "Delete Account"}
+                    {terror && (
+                      <div className="text-red-500 text-xs mt-2">
+                        error deleting task
+                      </div>
+                    )}
+                  </button>
+                )}
+
+                {terror && (
+                  <div className="text-red-500 text-xs mt-2">
+                    error deleting task
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

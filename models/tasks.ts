@@ -6,7 +6,7 @@ interface TaskInterface {
   status: "pending" | "in progress" | "completed";
   assignedTo?: mongoose.Schema.Types.ObjectId;
   projectId: mongoose.Schema.Types.ObjectId;
-  dueDate: Date;
+  Duedate: Date;
   createdBy: string;
 }
 
@@ -38,7 +38,7 @@ const taskSchema = new Schema<TaskInterface>(
       required: true,
       index: true,                  
     },
-    dueDate: {                     
+    Duedate: {                     
       type: Date,
       required: true,
       index: true,                  
@@ -48,6 +48,7 @@ const taskSchema = new Schema<TaskInterface>(
       required: true,
       index: true,                  
     },
+   
   },
   {
     timestamps: true,

@@ -226,8 +226,7 @@ export default function AccountProfile() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(session?.user.email),
       });
-      const check = await response.json();
-      console.log(check);
+      await response.json();
 
       setTimeout(() => {
         signOut({ redirect: true, callbackUrl: "/" });

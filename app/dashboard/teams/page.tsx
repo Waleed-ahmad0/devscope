@@ -208,7 +208,6 @@ export default function TeamsPage() {
             </button>
           </div>
 
-          {/* EMPTY STATE */}
           {teams.length === 0 ? (
             <div className="bg-white border-[1.5px] border-slate-200 rounded-2xl py-16 px-6 text-center animate-fade-in-up">
               <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-5">
@@ -254,7 +253,6 @@ export default function TeamsPage() {
               </button>
             </div>
           ) : (
-            /* GRID */
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {teams.map((team) => {
                 const isOwner = team.ownerId === data?.user?.id;
@@ -267,7 +265,6 @@ export default function TeamsPage() {
                   >
                     <div className="absolute left-0 top-0 right-0 h-[3px] bg-[var(--tc,#2563eb)] opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
 
-                    {/* top */}
                     <div className="flex items-center gap-3.5 mb-4 mt-1">
                       <div
                         className="w-12 h-12 rounded-xl flex items-center justify-center text-base font-extrabold text-white flex-shrink-0"
@@ -289,7 +286,6 @@ export default function TeamsPage() {
 
                     <div className="h-px bg-slate-100 mb-3.5" />
 
-                    {/* meta */}
                     <div className="flex items-center gap-2 mb-3.5 flex-wrap">
                       <span className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-slate-600 bg-slate-50 border border-slate-200 rounded-full px-3 py-1">
                         <svg
@@ -312,7 +308,6 @@ export default function TeamsPage() {
                       </span>
                     </div>
 
-                    {/* open button */}
                     <Link
                       href={`/dashboard/teams/${team._id}`}
                       className="mt-auto flex items-center justify-center gap-2 w-full py-2.5 text-[13.5px] font-semibold text-slate-600 bg-slate-50 border-[1.5px] border-slate-200 rounded-xl no-underline transition-all duration-150 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200"

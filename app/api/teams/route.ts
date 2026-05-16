@@ -72,7 +72,7 @@ export async function POST(req: Request) {
       userId: new mongoose.Types.ObjectId(session?.user?.id),
       teamId: new mongoose.Types.ObjectId(createdTeam._id),
       projectId: new mongoose.Types.ObjectId(createdTeam.projectId),
-      action: `Added team ${createdTeam.name}`,
+      action: `Added team :"${createdTeam.name}"`,
       createdAt: new Date(),
     };
     await activity.create(createactivity);

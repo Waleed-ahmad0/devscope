@@ -153,6 +153,7 @@ function shimmer(
 }
 
 export default function ProjectsPage() {
+  const [refreshKey, setRefreshKey] = useState(0);
   const [projects, setProjects] = useState<Project[]>([]);
   const [createProject, setcreateProject] = useState(false);
   const [progressMap, setProgressMap] = useState<Record<string, number>>({});
@@ -204,9 +205,8 @@ export default function ProjectsPage() {
       }
     };
     fetchProjects();
-  }, []);
+  }, [refreshKey]);
 
-  /* unique teams for dropdown */
   const uniqueTeams = useMemo(() => {
     const names = Array.from(
       new Set(projects.map((p) => p.team?.name).filter(Boolean)),
@@ -273,8 +273,8 @@ export default function ProjectsPage() {
             Failed to load projects
           </h2>
           <p className="text-sm text-slate-500 mb-1 leading-relaxed">
-            We couldn&apos;t fetch your project data. This might be a
-            temporary issue.
+            We couldn&apos;t fetch your project data. This might be a temporary
+            issue.
           </p>
 
           <div className="flex flex-col gap-2.5">
@@ -693,7 +693,11 @@ export default function ProjectsPage() {
         </div>
       </div>
 
-      <CreateProject isOpen={createProject} setIsOpen={setcreateProject} />
+      <CreateProject
+        isOpen={createProject}
+        setIsOpen={setcreateProject}
+        onSuccess={() => setRefreshKey((k) => k + 1)}
+      />
     </>
   );
 }

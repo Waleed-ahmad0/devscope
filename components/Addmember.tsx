@@ -11,11 +11,13 @@ export default function addMember({
   id,
   isOpen,
   setIsOpen,
+  onSuccess
 }: {
   owneremail:string,
   id: string;
   isOpen: boolean;
   setIsOpen: (value: boolean) => void;
+  onSuccess?: () => void;
 }) {
   const [members, setMembers] = useState<MemberInput[]>([
     { user: "", role: "member" },
@@ -84,10 +86,9 @@ export default function addMember({
       if (res.ok) {
         setMembers([{ user: "", role: "member" }]);
         setIsOpen(false);
+        onSuccess?.()
       }
-      // if () {
-      //   setErrors({ members: data.error });
-      // }
+      
     } catch (err) {
       // setSubmitting(false);
       console.error("Failed to add member:", err);

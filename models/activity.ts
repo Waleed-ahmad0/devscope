@@ -7,7 +7,6 @@ interface ActivityInterface {
   taskId?: mongoose.Schema.Types.ObjectId;
   action: string;
   userName: string;
-  createdAt?: Date;
 }
 
 const activitySchema = new Schema<ActivityInterface>(

@@ -19,9 +19,10 @@ interface DeleteMemberModalProps {
   isOpen: boolean;
   onClose: () => void;
   members: Member[];
+  onSuccess?: () => void;
 }
 
-export default function DeleteMemberModal({id, isOpen, onClose, members }: DeleteMemberModalProps) {
+export default function DeleteMemberModal({id, isOpen, onClose, members ,onSuccess }: DeleteMemberModalProps) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   if (!isOpen) return null;
@@ -47,6 +48,7 @@ export default function DeleteMemberModal({id, isOpen, onClose, members }: Delet
     if(req.ok){
       setSelectedIds([]);
       onClose();
+      onSuccess?.()
     }
   };
 

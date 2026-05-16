@@ -27,7 +27,7 @@ export async function PATCH(req: NextRequest) {
     const createactivity = {
       userName: (session?.user?.name || session?.user?.firstName)?.trim(),
       userId: new mongoose.Types.ObjectId(session?.user?.id),
-      action: `marked task "${title}" as ${status} `,
+      action: `marked task "${title}" as "${status}" `,
       teamId: new mongoose.Types.ObjectId(teamId),
       projectId: new mongoose.Types.ObjectId(projectId),
       createdAt: new Date(),

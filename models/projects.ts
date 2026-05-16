@@ -4,7 +4,7 @@ interface ProjectInterface {
   name: string;
   description: string;
   team: mongoose.Schema.Types.ObjectId;
-  userId: string;
+  userId: mongoose.Schema.Types.ObjectId;
   status: string;
 }
 
@@ -32,7 +32,7 @@ const projectSchema = new Schema<ProjectInterface>(
       index: true,                    
     },
     userId: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
       required: true,
       index: true,                    
     },
