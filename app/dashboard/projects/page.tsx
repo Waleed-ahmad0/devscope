@@ -208,7 +208,6 @@ export default function ProjectsPage() {
   }, [refreshKey]);
 
   const uniqueTeams = useMemo(() => {
-    console.log(projects)
     const names = Array.from(
       new Set(projects.map((p) => p.team?.name).filter(Boolean)),
     );

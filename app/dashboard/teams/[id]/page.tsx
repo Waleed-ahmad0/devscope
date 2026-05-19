@@ -150,7 +150,6 @@ export default function TeamDetailPage({
       }
       const emails = data.members.map((member: Member) => member.user.email);
       setMembersEmail(emails);
-      console.log(emails);
       setTeam(data);
     } catch (err) {
       console.error("Failed to fetch team:", err);
@@ -218,7 +217,6 @@ export default function TeamDetailPage({
     }
   };
 
-  /* ── states ── */
   if (loading) return <SkeletonPage />;
 
   if (!team)
@@ -309,14 +307,11 @@ export default function TeamDetailPage({
                     </button>
                   </div>
 
-                  {/* Menu Content */}
                   <div className="p-4 space-y-3">
-                    {/* Exit Team */}
                     <button
                       onClick={() => {
                         setexitconfirm(true);
-                        // exitTeam();
-                        // setShowMenu(false);
+                        
                       }}
                       className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-50 text-slate-700 font-medium transition-colors border border-transparent hover:border-slate-200 group"
                     >

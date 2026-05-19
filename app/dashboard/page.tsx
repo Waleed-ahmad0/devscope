@@ -46,7 +46,6 @@ export default function DashboardPage() {
   const [quickMenuOpen, setQuickMenuOpen] = useState(false);
   const quickMenuRef = useRef<HTMLDivElement>(null);
 
-  // Close quick-action menu on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (quickMenuRef.current && !quickMenuRef.current.contains(e.target as Node)) {

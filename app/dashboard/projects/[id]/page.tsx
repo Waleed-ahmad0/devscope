@@ -1,6 +1,5 @@
 "use client";
 import { useSession } from "next-auth/react";
-import { notFound } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { use, useState, useEffect } from "react";
 interface Members {
@@ -72,7 +71,6 @@ export default function ProjectDetailPage({
   const [activitiesLoading, setActivitiesLoading] = useState(false);
   const [project, setproject] = useState<ProjectDetail | null>(null);
   const [projectLoading, setProjectLoading] = useState(true);
-  const [isNotFound, setIsNotFound] = useState(false);
   const [progress, setprogress] = useState<number>(0);
   const [refresh, setrefresh] = useState<boolean>(false);
   const [tasks, settasks] = useState<Task[]>([]);
@@ -224,11 +222,7 @@ export default function ProjectDetailPage({
     }
   };
 
-  useEffect(() => {
-    if (project === null && !projectLoading) {
-      setIsNotFound(true);
-    }
-  }, [project, projectLoading]);
+
 
   const handleTaskSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -331,8 +325,25 @@ export default function ProjectDetailPage({
     getprojects();
   }, [id, refresh]);
 
-  if (isNotFound) {
-    notFound();
+  if (!projectLoading && !project && !perror) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 text-slate-500 p-6">
+        <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+          </svg>
+        </div>
+        <p className="text-base font-semibold text-slate-700">Project not found</p>
+        <p className="text-sm text-slate-400">This project may have been deleted or you don&apos;t have access.</p>
+        <button
+          onClick={() => router.push("/dashboard/projects")}
+          className="inline-flex items-center gap-2 mt-2 px-5 py-2.5 text-sm font-semibold text-white rounded-lg shadow-sm transition-all duration-150 hover:-translate-y-px"
+          style={{ background: "linear-gradient(135deg,#2563eb,#1d4ed8)" }}
+        >
+          ← Back to Projects
+        </button>
+      </div>
+    );
   }
   const handleStatusChange = async (
     taskId: string,

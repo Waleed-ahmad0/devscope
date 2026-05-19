@@ -52,7 +52,6 @@ export default function addMember({
     e.preventDefault();
 
     const filledMembers = members.filter((m) => m.user.trim() !== "");
-    console.log(filledMembers);
     if (filledMembers.some((m) => m.user === adminemail)) {
       setErrors({ members: "You cannot add yourself as a member" });
       return;
@@ -92,7 +91,6 @@ export default function addMember({
         body: JSON.stringify(sendingmember),
       });
       const data = await res.json();
-      console.log(data);
       if (!res.ok) {
         setErrors({ members: data.error});
       }

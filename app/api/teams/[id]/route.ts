@@ -50,7 +50,6 @@ export async function PATCH(
     await dbConnect();
     const { id } = await params;
     const body = await req.json();
-    // console.log("body", body);
     if (body.newadmin) {
       const oldadmin = await Team.findById(id);
       const user = await User.findOne({ email: body.newadmin });
@@ -99,14 +98,12 @@ export async function PATCH(
       }),
     );
     const members = membersData.map((m) => ({ user: m.user, role: m.role }));
-    console.log(members);
     const membersname = membersData.map((m) => m.name);
     const team = await Team.findByIdAndUpdate(
       id,
       { $push: { members: { $each: members } } },
       { new: true, runValidators: true },
     );
-    // console.log(team);
     const createactivity = {
       userName: session?.user?.name || session?.user?.firstName,
       userId: new mongoose.Types.ObjectId(session?.user?.id),
@@ -119,7 +116,6 @@ export async function PATCH(
 
     return NextResponse.json(team, { status: 200 });
   } catch (error) {
-    // console.log(error );
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Server error" },
       { status: 500 },

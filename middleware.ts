@@ -26,9 +26,6 @@ export const middleware = withAuth(
                     return true;
                 }
 
-                // if (pathname.startsWith("/add-product")) {
-                //     return token?.role === "admin";
-                // }
 
                 return !!token;
             }
@@ -38,5 +35,5 @@ export const middleware = withAuth(
 
 export const config = {
     matcher: [
-        "/((?!api|product|_next/static|_next/image|favicon.ico|products|fashion|electronics).*)"],
+        "/dashboard/:path*"],
 };
