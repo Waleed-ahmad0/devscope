@@ -175,182 +175,611 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="relative max-w-5xl mx-auto mt-16 animate-fade-in-up animation-delay-500 px-4 sm:px-6 lg:px-0">
-  {/* Browser chrome */}
-  <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-2xl transition-transform duration-300 hover:-translate-y-1">
-    <div className="px-4 sm:px-6 py-3 sm:py-4 bg-slate-100 border-b border-slate-200 flex items-center gap-2 sm:gap-3">
-      <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-red-400" />
-      <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-yellow-400" />
-      <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-green-400" />
-      <div className="ml-2 sm:ml-3 flex-1 bg-white border border-slate-200 rounded-md px-2 sm:px-3 py-1 text-[0.6rem] sm:text-xs text-slate-400 font-mono max-w-[140px] sm:max-w-xs truncate">
-        devscope.app/dashboard
-      </div>
-    </div>
+          <div className="relative max-w-5xl mx-auto mt-16 px-4 sm:px-6 lg:px-0 animate-fade-in-up animation-delay-500">
+            {/* Browser chrome */}
+            <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-2xl transition-transform duration-300 hover:-translate-y-1">
+              {/* Title bar */}
+              <div className="px-4 sm:px-5 py-3 bg-slate-100 border-b border-slate-200 flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-red-400" />
+                <span className="w-3 h-3 rounded-full bg-yellow-400" />
+                <span className="w-3 h-3 rounded-full bg-green-400" />
+                <div className="ml-2 flex-1 bg-white border border-slate-200 rounded-md px-3 py-1 text-[0.6rem] text-slate-400 font-mono max-w-[180px] sm:max-w-xs truncate">
+                  devscope.app/dashboard
+                </div>
+              </div>
 
-    <div className="flex flex-col md:flex-row min-h-80 sm:min-h-96">
-      {/* Sidebar — horizontal scrollable strip on mobile, vertical on md+ */}
-      <aside className="w-full md:w-52 bg-slate-50 border-b md:border-b-0 md:border-r border-slate-200 md:p-4 flex flex-row md:flex-col overflow-x-auto md:overflow-visible gap-1 p-2">
-        <p className="hidden md:block text-[0.6rem] font-bold tracking-widest uppercase text-slate-400 px-3 mb-2">
-          Workspace
-        </p>
-        {[
-          { icon: "⊞", label: "Dashboard", active: true },
-          { icon: "◫", label: "Projects", active: false },
-          { icon: "✓", label: "My Tasks", active: false },
-          { icon: "⊙", label: "Team", active: false },
-        ].map(({ icon, label, active }) => (
-          <div
-            key={label}
-            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs sm:text-sm font-medium cursor-default transition-colors whitespace-nowrap shrink-0 md:shrink ${
-              active
-                ? "bg-blue-600 text-white"
-                : "text-slate-500 hover:bg-slate-200"
-            }`}
-          >
-            <span className="text-sm leading-none">{icon}</span>
-            {label}
-          </div>
-        ))}
-      </aside>
+              <div className="flex min-h-[420px] sm:min-h-[480px]">
+                {/* ── Sidebar ── */}
+                <aside className="hidden sm:flex w-44 bg-white border-r border-slate-200 flex-col shrink-0">
+                  {/* Logo */}
+                  <div className="px-4 py-4 border-b border-slate-100 flex items-center gap-2">
+                    <div className="w-6 h-6 bg-blue-600 rounded-md flex items-center justify-center">
+                      <svg
+                        className="w-3 h-3 text-white"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2.5}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
+                        />
+                      </svg>
+                    </div>
+                    <span className="text-xs font-bold text-slate-800">
+                      DevScope
+                    </span>
+                  </div>
 
-      {/* Main content */}
-      <div className="flex-1 p-4 sm:p-6 flex flex-col gap-3 sm:gap-4 bg-white">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xs sm:text-sm font-bold text-slate-800">Active Tasks</h2>
-          <span className="text-[0.6rem] sm:text-xs bg-blue-50 text-blue-600 font-medium px-2 py-0.5 rounded-full border border-blue-100">
-            3 in progress
-          </span>
-        </div>
+                  {/* Nav items */}
+                  <nav className="px-2 py-3 flex flex-col gap-0.5">
+                    {[
+                      {
+                        label: "Dashboard",
+                        active: true,
+                        icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6",
+                      },
+                      {
+                        label: "Teams",
+                        active: false,
+                        icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z",
+                      },
+                      {
+                        label: "Projects",
+                        active: false,
+                        icon: "M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z",
+                      },
+                      {
+                        label: "Profile",
+                        active: false,
+                        icon: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z",
+                      },
+                    ].map(({ label, active, icon }) => (
+                      <div
+                        key={label}
+                        className={`flex items-center gap-2 px-2.5 py-2 rounded-lg text-[0.7rem] font-medium transition-colors ${
+                          active ? "bg-blue-50 text-blue-700" : "text-slate-500"
+                        }`}
+                      >
+                        <svg
+                          className={`w-3.5 h-3.5 shrink-0 ${active ? "text-blue-600" : "text-slate-400"}`}
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth={1.8}
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d={icon}
+                          />
+                        </svg>
+                        {label}
+                        {active && (
+                          <span className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-500" />
+                        )}
+                      </div>
+                    ))}
+                  </nav>
 
-        {[
-          {
-            title: "Design system setup",
-            tag: "UI",
-            tagColor: "bg-purple-100 text-purple-600",
-            assignee: "AR",
-            avatarColor: "bg-purple-400",
-            priority: "High",
-            priorityColor: "text-red-500",
-            progress: 75,
-          },
-          {
-            title: "API integration — auth endpoints",
-            tag: "Backend",
-            tagColor: "bg-green-100 text-green-600",
-            assignee: "MS",
-            avatarColor: "bg-green-400",
-            priority: "Medium",
-            priorityColor: "text-yellow-500",
-            progress: 40,
-          },
-          {
-            title: "Write onboarding docs",
-            tag: "Docs",
-            tagColor: "bg-orange-100 text-orange-600",
-            assignee: "ZK",
-            avatarColor: "bg-orange-400",
-            priority: "Low",
-            priorityColor: "text-slate-400",
-            progress: 20,
-          },
-        ].map((task, i) => (
-          <div
-            key={task.title}
-            className="border border-slate-200 rounded-xl p-3 sm:p-4 flex flex-col gap-2 sm:gap-2.5 animate-slide-in-right"
-            style={{ animationDelay: `${(i + 1) * 100}ms` }}
-          >
-            <div className="flex items-start justify-between gap-2">
-              <div className="flex items-center gap-2 flex-wrap min-w-0">
-                <span className="text-xs sm:text-sm font-medium text-slate-700 truncate">
-                  {task.title}
-                </span>
-                <span
-                  className={`text-[0.55rem] sm:text-[0.6rem] font-semibold tracking-wide px-1.5 sm:px-2 py-0.5 rounded-full shrink-0 ${task.tagColor}`}
+                  {/* Bottom user */}
+                  <div className="mt-auto px-2 py-3 border-t border-slate-100">
+                    <div className="flex items-center gap-2 px-2 py-2 rounded-lg">
+                      <div className="w-6 h-6 rounded-full bg-blue-600 text-white text-[0.5rem] font-bold flex items-center justify-center shrink-0">
+                        L
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[0.65rem] font-semibold text-slate-700 truncate">
+                          John
+                        </p>
+                        <p className="text-[0.5rem] text-slate-400 truncate">
+                          [johndoe@gmail.com]
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </aside>
+
+                {/* ── Main content ── */}
+                <div className="flex-1 flex flex-col bg-[#f8f9fc] overflow-hidden">
+                  {/* Topbar */}
+                  <div className="bg-white border-b border-slate-200 px-4 py-2.5 flex items-center gap-2">
+                    <div className="hidden sm:flex items-center gap-1 text-[0.65rem]">
+                      <span className="text-slate-400">Dashboard</span>
+                      <svg
+                        className="w-3 h-3 text-slate-300"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M9 5l7 7-7 7"
+                        />
+                      </svg>
+                      <span className="font-semibold text-slate-700">
+                        Overview
+                      </span>
+                    </div>
+                    <div className="flex-1 sm:ml-3">
+                      <div className="relative max-w-xs">
+                        <svg
+                          className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth={2}
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                          />
+                        </svg>
+                        <div className="w-full pl-7 pr-8 py-1.5 text-[0.6rem] bg-slate-50 border border-slate-200 rounded-lg text-slate-400 font-mono">
+                          Search projects, tasks... (Cmd+K)
+                        </div>
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[0.45rem] text-slate-400 bg-white border border-slate-200 rounded px-1">
+                          ⌘K
+                        </span>
+                      </div>
+                    </div>
+                    <div className="w-6 h-6 rounded-full bg-blue-600 text-white text-[0.5rem] font-bold flex items-center justify-center ml-auto shrink-0">
+                      J
+                    </div>
+                  </div>
+
+                  <div className="flex-1 p-3 sm:p-4 space-y-3 overflow-hidden">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <h2 className="text-sm sm:text-base font-bold text-slate-800">
+                          Good morning,{" "}
+                          <span className="text-blue-600">john</span> 👋
+                        </h2>
+                        <p className="text-[0.6rem] text-slate-400 mt-0.5">
+                          Here's what's happening with your projects today.
+                        </p>
+                      </div>
+                      <div className="flex gap-1.5 shrink-0">
+                        <div className="flex items-center gap-1 px-2.5 py-1.5 text-[0.6rem] font-semibold text-slate-600 bg-white border border-slate-200 rounded-lg shadow-sm">
+                          <svg
+                            className="w-3 h-3"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
+                          </svg>
+                          <span className="hidden sm:inline">New Team</span>
+                        </div>
+                        <div className="flex items-center gap-1 px-2.5 py-1.5 text-[0.6rem] font-semibold text-white bg-blue-600 rounded-lg shadow-sm">
+                          <svg
+                            className="w-3 h-3"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={2.5}
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M12 4v16m8-8H4"
+                            />
+                          </svg>
+                          <span className="hidden sm:inline">New Project</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Stat cards */}
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        {
+                          label: "YOUR TEAMS",
+                          value: "1",
+                          sub: "Across your workspace",
+                          iconBg: "bg-blue-50",
+                          iconColor: "text-blue-600",
+                          icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z",
+                        },
+                        {
+                          label: "PROJECTS",
+                          value: "2",
+                          sub: "In progress",
+                          iconBg: "bg-emerald-50",
+                          iconColor: "text-emerald-600",
+                          icon: "M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z",
+                        },
+                        {
+                          label: "UPCOMING TASKS",
+                          value: "0",
+                          sub: "Pending tasks",
+                          iconBg: "bg-amber-50",
+                          iconColor: "text-amber-500",
+                          icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4",
+                        },
+                      ].map(
+                        ({ label, value, sub, iconBg, iconColor, icon }) => (
+                          <div
+                            key={label}
+                            className="bg-white border border-slate-200 rounded-xl p-2.5 sm:p-3 flex flex-col gap-2"
+                          >
+                            <div
+                              className={`w-7 h-7 rounded-lg ${iconBg} flex items-center justify-center`}
+                            >
+                              <svg
+                                className={`w-3.5 h-3.5 ${iconColor}`}
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                strokeWidth={1.8}
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d={icon}
+                                />
+                              </svg>
+                            </div>
+                            <div>
+                              <p className="text-[0.5rem] font-semibold tracking-widest uppercase text-slate-400">
+                                {label}
+                              </p>
+                              <p className="text-xl font-bold text-slate-800 leading-tight">
+                                {value}
+                              </p>
+                              <p className="text-[0.55rem] text-slate-400">
+                                {sub}
+                              </p>
+                            </div>
+                          </div>
+                        ),
+                      )}
+                    </div>
+
+                    {/* Bottom 3-column grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      {/* Recent Projects */}
+                      <div className="bg-white border border-slate-200 rounded-xl p-3">
+                        <div className="flex items-center justify-between mb-2.5">
+                          <p className="text-[0.7rem] font-bold text-slate-800">
+                            Recent Projects
+                          </p>
+                          <span className="text-[0.6rem] font-semibold text-blue-600">
+                            View all →
+                          </span>
+                        </div>
+                        <div className="space-y-1.5">
+                          {[
+                            {
+                              initials: "SA",
+                              color: "bg-orange-500",
+                              name: "startup alpha",
+                              meta: "1 task · Apr 29",
+                              progress: 0,
+                            },
+                            {
+                              initials: "FY",
+                              color: "bg-violet-600",
+                              name: "final year project",
+                              meta: "1 task · 3d ago",
+                              progress: 0,
+                            },
+                          ].map((p) => (
+                            <div
+                              key={p.name}
+                              className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-slate-50 transition-colors group"
+                            >
+                              <div
+                                className={`w-7 h-7 rounded-lg ${p.color} text-white text-[0.55rem] font-bold flex items-center justify-center shrink-0`}
+                              >
+                                {p.initials}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-[0.65rem] font-semibold text-slate-700 capitalize truncate">
+                                  {p.name}
+                                </p>
+                                <p className="text-[0.55rem] text-slate-400">
+                                  {p.meta}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                <div className="w-10 h-1 bg-slate-100 rounded-full overflow-hidden">
+                                  <div
+                                    className="h-full bg-blue-500 rounded-full"
+                                    style={{ width: `${p.progress}%` }}
+                                  />
+                                </div>
+                                <span className="text-[0.5rem] text-slate-400">
+                                  {p.progress}%
+                                </span>
+                                <svg
+                                  className="w-3 h-3 text-slate-300"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                  strokeWidth={2}
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M9 5l7 7-7 7"
+                                  />
+                                </svg>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Upcoming Tasks */}
+                      <div className="bg-white border border-slate-200 rounded-xl p-3">
+                        <div className="flex items-center justify-between mb-2.5">
+                          <p className="text-[0.7rem] font-bold text-slate-800">
+                            Upcoming Tasks
+                          </p>
+                          <span className="text-[0.5rem] font-semibold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-md">
+                            0 total
+                          </span>
+                        </div>
+                        <div className="flex flex-col items-center justify-center h-28 gap-2">
+                          <div className="w-9 h-9 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center">
+                            <svg
+                              className="w-4 h-4 text-slate-300"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth={1.5}
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                              />
+                            </svg>
+                          </div>
+                          <p className="text-[0.65rem] font-semibold text-slate-400">
+                            No pending tasks
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Teams + Activity */}
+                      <div className="flex flex-col gap-2">
+                        {/* Teams */}
+                        <div className="bg-white border border-slate-200 rounded-xl p-3">
+                          <div className="flex items-center justify-between mb-2">
+                            <p className="text-[0.7rem] font-bold text-slate-800">
+                              Your Teams
+                            </p>
+                            <span className="text-[0.6rem] font-semibold text-blue-600">
+                              View all →
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-slate-50 transition-colors group cursor-default">
+                            <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white text-[0.55rem] font-bold flex items-center justify-center shrink-0">
+                              ST
+                            </div>
+                            <p className="text-[0.65rem] font-semibold text-slate-700 flex-1">
+                              startup alpha
+                            </p>
+                            <svg
+                              className="w-3 h-3 text-slate-300"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth={2}
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M9 5l7 7-7 7"
+                              />
+                            </svg>
+                          </div>
+                        </div>
+
+                        {/* Recent Activity */}
+                        <div className="bg-white border border-slate-200 rounded-xl p-3 flex-1">
+                          <div className="flex items-center justify-between mb-2.5">
+                            <p className="text-[0.7rem] font-bold text-slate-800">
+                              Recent Activity
+                            </p>
+                            <span className="text-[0.5rem] font-bold text-blue-600 bg-blue-50 border border-blue-100 px-1.5 py-0.5 rounded-md">
+                              3
+                            </span>
+                          </div>
+                          <div className="space-y-2.5">
+                            {[
+                              {
+                                icon: "plus",
+                                action: "Added member",
+                                target: '"steve"',
+                                time: "2h ago · 12:23 AM",
+                              },
+                              {
+                                icon: "clock",
+                                action: "Task marked as",
+                                target: '"pending"',
+                                time: "20h ago · 5:58 AM",
+                              },
+                              {
+                                icon: "clock",
+                                action: "Task marked as",
+                                target: '"in progress"',
+                                time: "20h ago · 5:58 AM",
+                              },
+                            ].map((a, i) => (
+                              <div key={i} className="flex items-start gap-2">
+                                <div
+                                  className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${a.icon === "plus" ? "bg-emerald-100" : "bg-blue-100"}`}
+                                >
+                                  {a.icon === "plus" ? (
+                                    <svg
+                                      className="w-2.5 h-2.5 text-emerald-600"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                      stroke="currentColor"
+                                      strokeWidth={3}
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M12 4v16m8-8H4"
+                                      />
+                                    </svg>
+                                  ) : (
+                                    <svg
+                                      className="w-2.5 h-2.5 text-blue-600"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                      stroke="currentColor"
+                                      strokeWidth={2.5}
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2"
+                                      />
+                                    </svg>
+                                  )}
+                                </div>
+                                <div>
+                                  <p className="text-[0.6rem] text-slate-600 leading-snug">
+                                    <span className="font-semibold text-slate-800">
+                                      john doe{" "}
+                                    </span>{" "}
+                                    {a.action}{" "}
+                                    <span className="font-medium text-blue-600">
+                                      {a.target}
+                                    </span>
+                                  </p>
+                                  <p className="text-[0.5rem] text-slate-400 mt-0.5">
+                                    {a.time}
+                                  </p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {/* end body */}
+                </div>
+                {/* end main */}
+              </div>
+              {/* end flex */}
+            </div>
+            {/* end browser chrome */}
+
+            {/* ── Floating badge: Task completed ── */}
+            <div className="hidden lg:flex absolute top-1/4 -right-8 xl:-right-16 bg-white border border-slate-200 rounded-xl shadow-lg px-4 py-3 items-center gap-3 animate-float">
+              <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center shrink-0">
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  stroke="#16a34a"
+                  strokeWidth="2.5"
                 >
-                  {task.tag}
-                </span>
+                  <path d="M7 10L9 12L13 8M19 10C19 14.9706 14.9706 19 10 19C5.02944 19 1 14.9706 1 10C1 5.02944 5.02944 1 10 1C14.9706 1 19 5.02944 19 10Z" />
+                </svg>
               </div>
-              <span className={`text-[0.6rem] sm:text-xs font-semibold shrink-0 ${task.priorityColor}`}>
-                {task.priority}
-              </span>
+              <div>
+                <p className="text-xs font-semibold text-slate-700 leading-tight">
+                  Task completed
+                </p>
+                <p className="text-[0.6rem] text-slate-400 leading-tight">
+                  Design system setup
+                </p>
+              </div>
             </div>
 
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-blue-500 rounded-full transition-all"
-                  style={{ width: `${task.progress}%` }}
-                />
+            {/* ── Floating badge: New member ── */}
+            <div className="hidden lg:flex absolute bottom-1/4 -left-8 xl:-left-16 bg-white border border-slate-200 rounded-xl shadow-lg px-4 py-3 items-center gap-3 animate-float animation-delay-1500">
+              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  stroke="#2563eb"
+                  strokeWidth="2"
+                >
+                  <path d="M12 8C12 9.10457 11.1046 10 10 10C8.89543 10 8 9.10457 8 8C8 6.89543 8.89543 6 10 6C11.1046 6 12 6.89543 12 8Z" />
+                  <path d="M6 16C6 13.7909 7.79086 12 10 12C12.2091 12 14 13.7909 14 16" />
+                </svg>
               </div>
-              <span className="text-[0.55rem] sm:text-[0.6rem] text-slate-400 font-mono w-6 sm:w-7 text-right shrink-0">
-                {task.progress}%
-              </span>
-              <div
-                className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full ${task.avatarColor} text-white text-[0.5rem] sm:text-[0.55rem] font-bold flex items-center justify-center shrink-0`}
-              >
-                {task.assignee}
+              <div>
+                <p className="text-xs font-semibold text-slate-700 leading-tight">
+                  New member joined
+                </p>
+                <p className="text-[0.6rem] text-slate-400 leading-tight">
+                  Ali joined Dev Team
+                </p>
+              </div>
+            </div>
+
+            {/* ── Mobile inline notification strip ── */}
+            <div className="flex lg:hidden mt-3 gap-2">
+              <div className="flex-1 bg-white border border-slate-200 rounded-xl shadow-sm px-3 py-2.5 flex items-center gap-2">
+                <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center shrink-0">
+                  <svg
+                    width="10"
+                    height="10"
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    stroke="#16a34a"
+                    strokeWidth="2.5"
+                  >
+                    <path d="M7 10L9 12L13 8M19 10C19 14.9706 14.9706 19 10 19C5.02944 19 1 14.9706 1 10C1 5.02944 5.02944 1 10 1C14.9706 1 19 5.02944 19 10Z" />
+                  </svg>
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[0.65rem] font-semibold text-slate-700 truncate">
+                    Task completed
+                  </p>
+                  <p className="text-[0.55rem] text-slate-400 truncate">
+                    Design system setup
+                  </p>
+                </div>
+              </div>
+              <div className="flex-1 bg-white border border-slate-200 rounded-xl shadow-sm px-3 py-2.5 flex items-center gap-2">
+                <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+                  <svg
+                    width="10"
+                    height="10"
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    stroke="#2563eb"
+                    strokeWidth="2"
+                  >
+                    <path d="M12 8C12 9.10457 11.1046 10 10 10C8.89543 10 8 9.10457 8 8C8 6.89543 8.89543 6 10 6C11.1046 6 12 6.89543 12 8Z" />
+                    <path d="M6 16C6 13.7909 7.79086 12 10 12C12.2091 12 14 13.7909 14 16" />
+                  </svg>
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[0.65rem] font-semibold text-slate-700 truncate">
+                    New member joined
+                  </p>
+                  <p className="text-[0.55rem] text-slate-400 truncate">
+                    Ali joined Dev Team
+                  </p>
+                </div>
               </div>
             </div>
           </div>
-        ))}
-      </div>
-    </div>
-  </div>
-
-  {/* Floating badge — Task completed — hidden on mobile/tablet, shown lg+ */}
-  <div className="hidden lg:flex absolute top-1/4 -right-8 xl:-right-16 bg-white border border-slate-200 rounded-xl shadow-lg px-4 py-3 items-center gap-3 animate-float">
-    <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center shrink-0">
-      <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="#16a34a" strokeWidth="2.5">
-        <path d="M7 10L9 12L13 8M19 10C19 14.9706 14.9706 19 10 19C5.02944 19 1 14.9706 1 10C1 5.02944 5.02944 1 10 1C14.9706 1 19 5.02944 19 10Z" />
-      </svg>
-    </div>
-    <div>
-      <p className="text-xs font-semibold text-slate-700 leading-tight">Task completed</p>
-      <p className="text-[0.6rem] text-slate-400 leading-tight">Design system setup</p>
-    </div>
-  </div>
-
-  {/* Floating badge — New member — hidden on mobile/tablet, shown lg+ */}
-  <div className="hidden lg:flex absolute bottom-1/4 -left-8 xl:-left-16 bg-white border border-slate-200 rounded-xl shadow-lg px-4 py-3 items-center gap-3 animate-float animation-delay-1500">
-    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
-      <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="#2563eb" strokeWidth="2">
-        <path d="M12 8C12 9.10457 11.1046 10 10 10C8.89543 10 8 9.10457 8 8C8 6.89543 8.89543 6 10 6C11.1046 6 12 6.89543 12 8Z" />
-        <path d="M6 16C6 13.7909 7.79086 12 10 12C12.2091 12 14 13.7909 14 16" />
-      </svg>
-    </div>
-    <div>
-      <p className="text-xs font-semibold text-slate-700 leading-tight">New member joined</p>
-      <p className="text-[0.6rem] text-slate-400 leading-tight">Ali joined Dev Team</p>
-    </div>
-  </div>
-
-  {/* Mobile-only inline notification strip (replaces floating badges) */}
-  <div className="flex lg:hidden mt-3 gap-2">
-    <div className="flex-1 bg-white border border-slate-200 rounded-xl shadow-sm px-3 py-2.5 flex items-center gap-2">
-      <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center shrink-0">
-        <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="#16a34a" strokeWidth="2.5">
-          <path d="M7 10L9 12L13 8M19 10C19 14.9706 14.9706 19 10 19C5.02944 19 1 14.9706 1 10C1 5.02944 5.02944 1 10 1C14.9706 1 19 5.02944 19 10Z" />
-        </svg>
-      </div>
-      <div className="min-w-0">
-        <p className="text-[0.65rem] font-semibold text-slate-700 leading-tight truncate">Task completed</p>
-        <p className="text-[0.55rem] text-slate-400 leading-tight truncate">Design system setup</p>
-      </div>
-    </div>
-    <div className="flex-1 bg-white border border-slate-200 rounded-xl shadow-sm px-3 py-2.5 flex items-center gap-2">
-      <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
-        <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="#2563eb" strokeWidth="2">
-          <path d="M12 8C12 9.10457 11.1046 10 10 10C8.89543 10 8 9.10457 8 8C8 6.89543 8.89543 6 10 6C11.1046 6 12 6.89543 12 8Z" />
-          <path d="M6 16C6 13.7909 7.79086 12 10 12C12.2091 12 14 13.7909 14 16" />
-        </svg>
-      </div>
-      <div className="min-w-0">
-        <p className="text-[0.65rem] font-semibold text-slate-700 leading-tight truncate">New member joined</p>
-        <p className="text-[0.55rem] text-slate-400 leading-tight truncate">Ali joined Dev Team</p>
-      </div>
-    </div>
-  </div>
-</div>
         </div>
       </section>
 
@@ -452,12 +881,11 @@ export default function HomePage() {
                 </h3>
               </Link>
               <p className="text-s text-gray-500">
-                A Full Stack Task Management system using Next.js 16, Tailwind CSS
-               & MongoDB
+                A Full Stack Task Management system using Next.js 16, Tailwind
+                CSS & MongoDB
               </p>
             </div>
 
-          
             <div className="flex flex-col items-center md:items-end gap-2">
               <p className="text-xs font-semibold text-gray-900">
                 Project by Developer
@@ -507,8 +935,7 @@ export default function HomePage() {
 
           <div className="mt-8 pt-6 border-t border-gray-100 text-center">
             <p className="text-s text-gray-500">
-              © {currentYear} DevScope Project. For
-              educational purposes only.
+              © {currentYear} DevScope Project. For educational purposes only.
             </p>
           </div>
         </div>
