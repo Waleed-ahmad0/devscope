@@ -7,7 +7,7 @@ interface TeamMember {
 
 interface TeamInterface {
   name: string;
-  ownerId: mongoose.Schema.Types.ObjectId;
+  adminId: mongoose.Schema.Types.ObjectId;
   members: TeamMember[];
 }
 
@@ -19,7 +19,7 @@ const teamsSchema = new Schema<TeamInterface>(
       index: true,                
     },
 
-    ownerId: {
+    adminId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
@@ -46,7 +46,7 @@ const teamsSchema = new Schema<TeamInterface>(
 
 teamsSchema.index({ "members.user": 1, "members.role": 1 });
 
-teamsSchema.index({ ownerId: 1, name: 1 });
+teamsSchema.index({ adminId: 1, name: 1 });
 teamsSchema.index({ name: "text" });
 
 const Team = models?.Team || model("Team", teamsSchema);

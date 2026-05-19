@@ -21,7 +21,7 @@ export async function GET(req: Request) {
     }
     const userId = new mongoose.Types.ObjectId(session.user.id);
     const teams = await Team.find({
-      $or: [{ ownerId: userId }, { "members.user": userId }],
+      $or: [{ adminId: userId }, { "members.user": userId }],
     });
 
     return NextResponse.json(teams, { status: 200 });
@@ -39,9 +39,6 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    // 
-
-    // Convert email addresses to user IDs
     const members = await Promise.all(
       body.members.map(async (member: members) => {
         const user = await User.findOne({ email: member.user });
@@ -60,10 +57,9 @@ export async function POST(req: Request) {
     const teamdata = {
       ...body,
       members,
-      ownerId: objectId,
+      adminId: objectId,
     };
 
-    // 
 
     const createdTeam = await Team.create(teamdata);
 

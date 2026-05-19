@@ -7,14 +7,16 @@ interface MemberInput {
 }
 
 export default function addMember({
-  owneremail,
+  adminemail,
+  teammembers,
   id,
   isOpen,
   setIsOpen,
-  onSuccess
+  onSuccess,
 }: {
-  owneremail:string,
+  adminemail: string;
   id: string;
+  teammembers: string[];
   isOpen: boolean;
   setIsOpen: (value: boolean) => void;
   onSuccess?: () => void;
@@ -48,26 +50,34 @@ export default function addMember({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // 
-    // Only validate filled member rows
-    const filledMembers = members.filter((m) => m.user.trim() !== "" );
-      if (filledMembers.some(m => m.user === owneremail)) {
+
+    const filledMembers = members.filter((m) => m.user.trim() !== "");
+    console.log(filledMembers);
+    if (filledMembers.some((m) => m.user === adminemail)) {
       setErrors({ members: "You cannot add yourself as a member" });
       return;
     }
-    if (filledMembers.some((obj, index) => 
-    filledMembers.findIndex(item => item.user === obj.user) !== index)) {
-      setErrors({members: "You cannot add same memeber twice" });
+    if (
+      filledMembers.some(
+        (obj, index) =>
+          filledMembers.findIndex(
+            (item) =>
+              item.user.trim().toLowerCase() === obj.user.trim().toLowerCase(),
+          ) !== index,
+      )
+    ) {
+      setErrors({ members: "You cannot add the same member twice" });
+      return;
+    }
+    const check = filledMembers.map((m) => m.user);
+    if (teammembers.filter((m) => check.includes(m)).length > 0) {
+      setErrors({ members: "this member already exist " });
       return;
     }
     const newErrors = {
       members: "",
     };
     setErrors(newErrors);
-    //if the entered email is already a member  ``or admin
-    // if () {
-
-    // }
     setSubmitting(true);
     const sendingmember = {
       members: filledMembers.map((m) => ({
@@ -75,7 +85,6 @@ export default function addMember({
         role: m.role,
       })),
     };
-    // 
     try {
       const res = await fetch(`/api/teams/${id}`, {
         method: "PATCH",
@@ -83,12 +92,15 @@ export default function addMember({
         body: JSON.stringify(sendingmember),
       });
       const data = await res.json();
+      console.log(data);
+      if (!res.ok) {
+        setErrors({ members: data.error});
+      }
       if (res.ok) {
         setMembers([{ user: "", role: "member" }]);
         setIsOpen(false);
-        onSuccess?.()
+        onSuccess?.();
       }
-      
     } catch (err) {
       // setSubmitting(false);
       console.error("Failed to add member:", err);
@@ -115,7 +127,7 @@ export default function addMember({
 
       {/* Modal */}
       <div className="relative w-full max-w-lg mx-4 animate-in fade-in zoom-in-95">
-        <div className="bg-gradient-to-br from-blue-50 to-white rounded-2xl shadow-xl border border-blue-100 p-8">
+        <div className="bg-linear-to-br from-blue-50 to-white rounded-2xl shadow-xl border border-blue-100 p-8">
           {/* Close button */}
           <button
             onClick={handleClose}
@@ -247,7 +259,7 @@ export default function addMember({
                       <span className="shrink-0">⚠</span>
                       <span>
                         {" "}
-                         <b>{errors.members}</b>
+                        <b>{errors.members}</b>
                       </span>
                     </p>
                   )}
@@ -267,7 +279,7 @@ export default function addMember({
               <button
                 type="submit"
                 disabled={submitting}
-                className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                className="flex-1 bg-linear-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {submitting ? "adding..." : "add member"}
               </button>

@@ -1,7 +1,7 @@
 "use client";
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import CreateProject from "@/components/CreateProject";
 import CreateTeam from "@/components/CreateTeam";
 
@@ -43,6 +43,19 @@ export default function DashboardPage() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [createProject, setcreateProject] = useState<boolean>(false);
   const [createTeam, setcreateTeam] = useState<boolean>(false);
+  const [quickMenuOpen, setQuickMenuOpen] = useState(false);
+  const quickMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close quick-action menu on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (quickMenuRef.current && !quickMenuRef.current.contains(e.target as Node)) {
+        setQuickMenuOpen(false);
+      }
+    };
+    if (quickMenuOpen) document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [quickMenuOpen]);
   const [activities, setActivities] = useState<activities[]>([]);
   const [teamnames, setteamnames] = useState<teams[]>([]);
   const [projects, setprojects] = useState<projectsshow[]>([]);
@@ -132,7 +145,7 @@ export default function DashboardPage() {
   }) {
     return (
       <div
-        className="animate-pulse bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 bg-[length:200%_100%]"
+        className="animate-pulse bg-linear-to-r from-slate-200 via-slate-100 to-slate-200 bg-size-[200%_100%]"
         style={{ width: w, height: h, borderRadius: radius }}
       />
     );
@@ -141,10 +154,10 @@ export default function DashboardPage() {
   if (loading || status === "loading") {
     return (
       <div
-        className="h-auto bg-slate-50 overflow-hidden grid gap-[18px] p-6 px-7"
+        className="h-auto bg-slate-50 grid gap-[18px] p-4 sm:p-6 sm:px-7"
         style={{ gridTemplateRows: "auto auto 1fr" }}
       >
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <SkeletonBox w="300px" h="30px" radius="8px" />
             <div className="mt-2">
@@ -156,7 +169,7 @@ export default function DashboardPage() {
             <SkeletonBox w="120px" h="38px" radius="10px" />
           </div>
         </div>
-        <div className="grid grid-cols-3 gap-3.5 mt-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5 mt-4">
           {[0, 1, 2].map((i) => (
             <div
               key={i}
@@ -173,8 +186,7 @@ export default function DashboardPage() {
           ))}
         </div>
         <div
-          className="grid gap-3.5 mt-4"
-          style={{ gridTemplateColumns: "1fr 1fr 290px" }}
+          className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_290px] gap-3.5 mt-4"
         >
           {[0, 1].map((i) => (
             <div
@@ -274,23 +286,25 @@ export default function DashboardPage() {
 
   return (
     <div
-      className="h-auto bg-slate-50 overflow-hidden grid gap-[18px] p-6 px-7 animate-fade-in-up"
+      className="h-auto bg-slate-50 grid gap-[18px] p-4 sm:p-6 sm:px-7 animate-fade-in-up"
       style={{ gridTemplateRows: "auto auto 1fr" }}
     >
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-[26px] font-extrabold text-slate-900 tracking-tight mb-[3px]">
+          <h1 className="text-[20px] sm:text-[26px] font-extrabold text-slate-900 tracking-tight mb-[3px]">
             Good morning,{" "}
             <span className="text-blue-600">
               {session?.user?.name || session?.user?.firstName}
             </span>{" "}
             👋
           </h1>
-          <p className="text-sm text-slate-500 m-0">
+          {/* <div onClick={() => { signOut() }}>hello</div> */}
+          <p className="hidden sm:block text-sm text-slate-500 m-0">
             Here's what's happening with your projects today.
           </p>
         </div>
-        <div className="flex items-center gap-2.5">
+        {/* Desktop: full buttons */}
+        <div className="hidden sm:flex items-center gap-2.5">
           <button
             onClick={() => setcreateTeam(true)}
             className="inline-flex items-center gap-[7px] font-bold text-sm rounded-[10px] px-[18px] py-[9px] cursor-pointer transition-all duration-150 bg-white text-blue-600 border border-blue-200 hover:bg-blue-50"
@@ -332,10 +346,64 @@ export default function DashboardPage() {
             New Project
           </button>
         </div>
+
+        {/* Mobile: single "+" button with dropdown */}
+        <div className="sm:hidden relative" ref={quickMenuRef}>
+          <button
+            onClick={() => setQuickMenuOpen((v) => !v)}
+            className="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-[0_2px_8px_rgba(37,99,235,0.35)] transition-all duration-200 hover:shadow-[0_4px_14px_rgba(37,99,235,0.45)] active:scale-95"
+            style={{ background: "linear-gradient(135deg,#2563eb,#1d4ed8)" }}
+            aria-label="Quick actions"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={`transition-transform duration-200 ${quickMenuOpen ? "rotate-45" : ""}`}
+            >
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+          </button>
+
+          {quickMenuOpen && (
+            <div className="absolute left-0 top-full mt-2 w-52 bg-white rounded-xl border border-slate-200 shadow-[0_8px_30px_rgba(0,0,0,0.12)] z-50 overflow-hidden animate-[pp-in_0.15s_ease]">
+              <button
+                onClick={() => { setcreateTeam(true); setQuickMenuOpen(false); }}
+                className="flex items-center gap-3 w-full px-4 py-3 text-left text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors border-b border-slate-100"
+              >
+                <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                  </svg>
+                </div>
+                New Team
+              </button>
+              <button
+                onClick={() => { setcreateProject(true); setQuickMenuOpen(false); }}
+                className="flex items-center gap-3 w-full px-4 py-3 text-left text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+              >
+                <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center shrink-0">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                  </svg>
+                </div>
+                New Project
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-3.5">
-        <div className="bg-white border border-slate-200 rounded-[14px] p-[18px_20px] flex items-center gap-4 transition-all duration-[180ms] hover:shadow-[0_4px_18px_rgba(37,99,235,0.1)] hover:-translate-y-0.5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
+        <div className="bg-white border border-slate-200 rounded-[14px] p-[18px_20px] flex items-center gap-4 transition-all duration-180 hover:shadow-[0_4px_18px_rgba(37,99,235,0.1)] hover:-translate-y-0.5">
           <div className="w-[46px] h-[46px] rounded-[12px] flex items-center justify-center shrink-0 bg-blue-50">
             <svg
               width="22"
@@ -363,7 +431,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-[14px] p-[18px_20px] flex items-center gap-4 transition-all duration-[180ms] hover:shadow-[0_4px_18px_rgba(37,99,235,0.1)] hover:-translate-y-0.5">
+        <div className="bg-white border border-slate-200 rounded-[14px] p-[18px_20px] flex items-center gap-4 transition-all duration-180 hover:shadow-[0_4px_18px_rgba(37,99,235,0.1)] hover:-translate-y-0.5">
           <div className="w-[46px] h-[46px] rounded-[12px] flex items-center justify-center shrink-0 bg-green-50">
             <svg
               width="22"
@@ -391,7 +459,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-[14px] p-[18px_20px] flex items-center gap-4 transition-all duration-[180ms] hover:shadow-[0_4px_18px_rgba(37,99,235,0.1)] hover:-translate-y-0.5">
+        <div className="bg-white border border-slate-200 rounded-[14px] p-[18px_20px] flex items-center gap-4 transition-all duration-180 hover:shadow-[0_4px_18px_rgba(37,99,235,0.1)] hover:-translate-y-0.5">
           <div className="w-[46px] h-[46px] rounded-[12px] flex items-center justify-center shrink-0 bg-yellow-50">
             <svg
               width="22"
@@ -424,8 +492,7 @@ export default function DashboardPage() {
       </div>
 
       <div
-        className="grid gap-3.5 min-h-0"
-        style={{ gridTemplateColumns: "1fr 1fr 290px" }}
+        className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_290px] gap-3.5 min-h-0"
       >
         <div className="bg-white border border-slate-200 rounded-[14px] flex flex-col overflow-hidden min-h-0">
           <div className="px-[18px] py-3.5 border-b border-slate-50 flex items-center justify-between shrink-0">
@@ -463,7 +530,7 @@ export default function DashboardPage() {
                   <Link
                     key={project._id}
                     href={`/dashboard/projects/${project._id}`}
-                    className="flex items-center gap-3 px-[18px] py-3 border-b border-slate-50 last:border-b-0 no-underline transition-colors duration-[120ms] hover:bg-slate-50 group"
+                    className="flex items-center gap-3 px-[18px] py-3 border-b border-slate-50 last:border-b-0 no-underline transition-colors duration-120 hover:bg-slate-50 group"
                   >
                     <div
                       className="w-10 h-10 rounded-[10px] flex items-center justify-center text-[13px] font-extrabold text-white shrink-0"
@@ -596,7 +663,7 @@ export default function DashboardPage() {
                         <Link
                           href={`/dashboard/projects/${task.projectId}`}
                           key={task._id}
-                          className={`flex items-center gap-2.5 px-[18px] py-2.5 border-b border-slate-50 last:border-b-0 no-underline transition-all duration-[120ms] hover:bg-slate-50 hover:shadow-[0_1px_4px_rgba(0,0,0,0.04)] group ${isOverdue ? "bg-red-50/70 border-l-[3px] border-l-red-300 hover:bg-red-50" : ""}`}
+                          className={`flex items-center gap-2.5 px-[18px] py-2.5 border-b border-slate-50 last:border-b-0 no-underline transition-all duration-120 hover:bg-slate-50 hover:shadow-[0_1px_4px_rgba(0,0,0,0.04)] group ${isOverdue ? "bg-red-50/70 border-l-[3px] border-l-red-300 hover:bg-red-50" : ""}`}
                         >
                           <div
                             className="w-2 h-2 rounded-full shrink-0"
@@ -684,7 +751,7 @@ export default function DashboardPage() {
                     <Link
                       key={team._id}
                       href={`/dashboard/teams/${team._id}`}
-                      className="flex items-center gap-3 px-4 py-2.5 border-b border-slate-50 last:border-b-0 no-underline transition-colors duration-[120ms] hover:bg-slate-50 group"
+                      className="flex items-center gap-3 px-4 py-2.5 border-b border-slate-50 last:border-b-0 no-underline transition-colors duration-120 hover:bg-slate-50 group"
                     >
                       <div
                         className="w-9 h-9 rounded-[9px] flex items-center justify-center text-xs font-extrabold text-white shrink-0"
@@ -784,7 +851,7 @@ export default function DashboardPage() {
                       <Link
                         href={`/dashboard/projects/${activity.projectId?._id}`}
                         key={activity._id}
-                        className="flex items-start gap-2.5 px-4 py-2.5 border-b border-slate-50 last:border-b-0 no-underline transition-colors duration-[120ms] hover:bg-slate-50"
+                        className="flex items-start gap-2.5 px-4 py-2.5 border-b border-slate-50 last:border-b-0 no-underline transition-colors duration-120 hover:bg-slate-50"
                       >
                         <div
                           className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-px"
@@ -809,14 +876,6 @@ export default function DashboardPage() {
                               {activity.userName}
                             </strong>{" "}
                             <span>{activity.action}</span>
-                            {activity.taskId?.title && (
-                              <>
-                                {" "}
-                                <span className="text-blue-600 font-semibold">
-                                  &quot;{activity.taskId.title}&quot;
-                                </span>
-                              </>
-                            )}
                           </p>
                           <div className="flex items-center gap-1.5 mt-[3px]">
                             <div

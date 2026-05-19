@@ -39,9 +39,9 @@ export async function GET(
     const { id } = await params;
     const project = await Project.findById(id).populate({
       path: "team",
-      select: "name ownerId members",
+      select: "name adminId members",
       populate: {
-        path: "ownerId",
+        path: "adminId",
         select: "firstName lastName",
       },
     });

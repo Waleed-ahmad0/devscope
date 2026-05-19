@@ -11,7 +11,7 @@ interface members {
 interface teamformat {
   _id: string;
   name: string;
-  ownerId: string;
+  adminId: string;
   members: members[];
 }
 
@@ -63,6 +63,7 @@ function SkeletonCard() {
 export default function TeamsPage() {
   const [showCreateTeam, setShowCreateTeam] = useState(false);
   const { data, status } = useSession();
+  const [refreshkey, setRefreshKey] = useState<number>(0);
   const [teams, setteams] = useState<teamformat[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, seterror] = useState(false);
@@ -76,7 +77,7 @@ export default function TeamsPage() {
         const res = await req.json();
         if (req.ok) {
           setteams(res);
-          setLoading(false)
+          setLoading(false);
         } else {
           seterror(true);
           setLoading(false);
@@ -88,7 +89,7 @@ export default function TeamsPage() {
       }
     };
     retreivingteams();
-  }, [data]);
+  }, [data, refreshkey]);
 
   const handleNewTeam = () => setShowCreateTeam(true);
 
@@ -135,8 +136,8 @@ export default function TeamsPage() {
             Failed to load teams
           </h2>
           <p className="text-sm text-slate-500 mb-1 leading-relaxed">
-            We couldn&apos;t fetch your teams data. This might be a
-            temporary issue.
+            We couldn&apos;t fetch your teams data. This might be a temporary
+            issue.
           </p>
 
           <div className="flex flex-col gap-2.5">
@@ -189,7 +190,7 @@ export default function TeamsPage() {
               </p>
             </div>
             <button
-              className="inline-flex items-center gap-2 text-sm font-bold text-white bg-gradient-to-br from-blue-600 to-blue-700 border-none rounded-lg py-2.5 px-5 cursor-pointer shadow-[0_2px_10px_rgba(37,99,235,0.3)] transition-all duration-150 hover:from-blue-700 hover:to-blue-800 hover:shadow-[0_4px_16px_rgba(37,99,235,0.38)] hover:-translate-y-px"
+              className="inline-flex items-center gap-2 text-sm font-bold text-white bg-linear-to-br from-blue-600 to-blue-700 border-none rounded-lg py-2.5 px-5 cursor-pointer shadow-[0_2px_10px_rgba(37,99,235,0.3)] transition-all duration-150 hover:from-blue-700 hover:to-blue-800 hover:shadow-[0_4px_16px_rgba(37,99,235,0.38)] hover:-translate-y-px"
               onClick={handleNewTeam}
             >
               <svg
@@ -234,7 +235,7 @@ export default function TeamsPage() {
                 Create your first team to start collaborating with others
               </p>
               <button
-                className="inline-flex items-center gap-2 text-sm font-bold text-white bg-gradient-to-br from-blue-600 to-blue-700 border-none rounded-lg py-3 px-6 cursor-pointer shadow-[0_2px_10px_rgba(37,99,235,0.3)] transition-all duration-150 hover:from-blue-700 hover:to-blue-800 hover:shadow-[0_4px_16px_rgba(37,99,235,0.38)] hover:-translate-y-px"
+                className="inline-flex items-center gap-2 text-sm font-bold text-white bg-linear-to-br from-blue-600 to-blue-700 border-none rounded-lg py-3 px-6 cursor-pointer shadow-[0_2px_10px_rgba(37,99,235,0.3)] transition-all duration-150 hover:from-blue-700 hover:to-blue-800 hover:shadow-[0_4px_16px_rgba(37,99,235,0.38)] hover:-translate-y-px"
                 onClick={handleNewTeam}
               >
                 <svg
@@ -255,7 +256,7 @@ export default function TeamsPage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {teams.map((team) => {
-                const isOwner = team.ownerId === data?.user?.id;
+                const isadmin = team.adminId === data?.user?.id;
                 const color = teamColor(team._id);
                 return (
                   <div
@@ -263,11 +264,11 @@ export default function TeamsPage() {
                     className="bg-white border-[1.5px] border-slate-200 rounded-2xl p-5 flex flex-col transition-all duration-200 relative overflow-hidden group hover:border-blue-200 hover:shadow-[0_8px_28px_rgba(37,99,235,0.1)] hover:-translate-y-1"
                     style={{ "--tc": color } as React.CSSProperties}
                   >
-                    <div className="absolute left-0 top-0 right-0 h-[3px] bg-[var(--tc,#2563eb)] opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
+                    <div className="absolute left-0 top-0 right-0 h-[3px] bg-(--tc,#2563eb) opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
 
                     <div className="flex items-center gap-3.5 mb-4 mt-1">
                       <div
-                        className="w-12 h-12 rounded-xl flex items-center justify-center text-base font-extrabold text-white flex-shrink-0"
+                        className="w-12 h-12 rounded-xl flex items-center justify-center text-base font-extrabold text-white shrink-0"
                         style={{ background: color }}
                       >
                         {teamInitials(team.name)}
@@ -277,9 +278,9 @@ export default function TeamsPage() {
                           {team.name}
                         </p>
                         <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11.5px] font-bold uppercase tracking-wider ${isOwner ? "bg-blue-50 text-blue-700" : "bg-slate-100 text-slate-600"}`}
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11.5px] font-bold uppercase tracking-wider ${isadmin ? "bg-blue-50 text-blue-700" : "bg-slate-100 text-slate-600"}`}
                         >
-                          {isOwner ? "Admin" : "Member"}
+                          {isadmin ? "Admin" : "Member"}
                         </span>
                       </div>
                     </div>
@@ -334,7 +335,11 @@ export default function TeamsPage() {
         </div>
       </div>
 
-      <CreateTeam isOpen={showCreateTeam} setIsOpen={setShowCreateTeam} />
+      <CreateTeam
+        isOpen={showCreateTeam}
+        setIsOpen={setShowCreateTeam}
+        onSuccess={() => setRefreshKey((k) => k + 1)}
+      />
     </>
   );
 }

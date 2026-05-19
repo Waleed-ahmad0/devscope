@@ -88,7 +88,7 @@ interface userdata {
 export default function AccountProfile() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [ownererror, setownererror] = useState<string>("");
+  const [adminerror, setadminerror] = useState<string>("");
   const [user, setUser] = useState<userdata>();
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<string>("profile");
@@ -202,15 +202,15 @@ export default function AccountProfile() {
   };
 
   const handleDeleteAccount = async () => {
-    const ownerlength = await fetch("/api/teams");
-    const data = await ownerlength.json();
+    const adminlength = await fetch("/api/teams");
+    const data = await adminlength.json();
     const filteredData = data.filter(
-      (team: any) => team.ownerId === session?.user.id,
+      (team: any) => team.adminId === session?.user.id,
     );
 
     if (filteredData.length > 0) {
-      setownererror(
-        "you are owner of some teams, transfer the ownership first",
+      setadminerror(
+        "You are admin of some teams, First, make someone else admin",
       );
       return;
     }
@@ -297,7 +297,7 @@ export default function AccountProfile() {
   }) {
     return (
       <div
-        className="animate-pulse bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 bg-[length:200%_100%]"
+        className="animate-pulse bg-linear-to-r from-slate-200 via-slate-100 to-slate-200 bg-size-[200%_100%]"
         style={{ width: w, height: h, borderRadius: radius }}
       />
     );
@@ -772,7 +772,7 @@ export default function AccountProfile() {
                   permanently deleted.
                 </p>
                 <p className="text-red-600 bg-red-200 text-sm text-center mb-6">
-                  {ownererror}{" "}
+                  {adminerror}{" "}
                 </p>
 
                 <div className="mb-6">

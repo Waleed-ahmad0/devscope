@@ -1,5 +1,4 @@
 "use client";
-import { Divide } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { notFound } from "next/navigation";
 import { useRouter } from "next/navigation";
@@ -13,7 +12,7 @@ interface Members {
 interface Team {
   _id: string;
   name: string;
-  ownerId: {
+  adminId: {
     _id: string;
     firstName: string;
     lastName: string;
@@ -107,7 +106,9 @@ export default function ProjectDetailPage({
     const fetchActivities = async () => {
       setActivitiesLoading(true);
       try {
-        const res = await fetch(`/api/activity?projectId=${id}`);
+        const res = await fetch(
+          `/api/activity?projectId=${id}&teamId=${project?.team._id}`,
+        );
         const data = await res.json();
         setActivities(data.getactivity || []);
       } catch (err) {
@@ -511,7 +512,7 @@ export default function ProjectDetailPage({
       completed: "bg-emerald-100 text-emerald-700",
     };
     const statusLabels: Record<Task["status"], string> = {
-      pending: "To Do",
+      pending: "pending",
       "in progress": "In Progress",
       completed: "Done",
     };
@@ -542,7 +543,7 @@ export default function ProjectDetailPage({
         }`}
       >
         {session?.user?.id === task.createdBy ||
-          (session?.user?.id === project?.team.ownerId._id && (
+          (session?.user?.id === project?.team.adminId._id && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -665,9 +666,9 @@ export default function ProjectDetailPage({
             }
             className="w-full px-3 py-1.5 text-xs font-medium bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer hover:bg-slate-100 transition-colors"
           >
-            <option value="pending">📋 Move to To Do</option>
+            <option value="pending">📋 Move to pending</option>
             <option value="in progress">🔄 Move to In Progress</option>
-            <option value="completed">✅ Move to Done</option>
+            <option value="completed">✅ Move pendingne</option>
           </select>
         </div>
       </div>
@@ -915,7 +916,7 @@ export default function ProjectDetailPage({
           {
             key: "pending",
             statusValue: "pending" as "pending" | "in progress" | "completed",
-            label: "To Do",
+            label: "pending",
             tasks: pendingTasks,
             dotColor: "bg-slate-400",
             headerBg: "bg-slate-50",
@@ -1099,9 +1100,9 @@ export default function ProjectDetailPage({
                       className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
                     >
                       <option value="">Open Tasks</option>
-                      <option value={project?.team.ownerId._id}>
-                        {project?.team.ownerId.firstName}{" "}
-                        {project?.team.ownerId.lastName} (Admin)
+                      <option value={project?.team.adminId._id}>
+                        {project?.team.adminId.firstName}{" "}
+                        {project?.team.adminId.lastName} (Admin)
                       </option>
                       {project?.team.members.map((member) => (
                         <option value={member.user} key={member._id}>
@@ -1311,7 +1312,7 @@ export default function ProjectDetailPage({
             ) : activities.length === 0 ? (
               <div className="bg-white rounded-xl border border-slate-200 p-12">
                 <div className="flex flex-col items-center justify-center text-center">
-                  <div className="w-16 h-16 bg-gradient-to-br from-slate-100 to-slate-50 rounded-2xl flex items-center justify-center mb-4 shadow-sm">
+                  <div className="w-16 h-16 bg-linear-to-br from-slate-100 to-slate-50 rounded-2xl flex items-center justify-center mb-4 shadow-sm">
                     <svg
                       className="w-8 h-8 text-slate-400"
                       fill="none"
@@ -1412,7 +1413,7 @@ export default function ProjectDetailPage({
                                   </div>
                                   {/* Avatar */}
                                   {act?.userName && (
-                                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-[10px] font-bold shrink-0 shadow-sm">
+                                    <div className="w-7 h-7 rounded-full bg-linear-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-[10px] font-bold shrink-0 shadow-sm">
                                       {act.userName[0].toUpperCase()}
                                     </div>
                                   )}
@@ -1538,7 +1539,7 @@ export default function ProjectDetailPage({
   }) {
     return (
       <div
-        className="animate-pulse bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 bg-[length:200%_100%]"
+        className="animate-pulse bg-linear-to-r from-slate-200 via-slate-100 to-slate-200 bg-size-[200%_100%]"
         style={{ width: w, height: h, borderRadius: radius }}
       />
     );
@@ -1666,7 +1667,7 @@ export default function ProjectDetailPage({
         <div className="mb-8 border-b border-slate-200">
           <div className="flex gap-8">
             {(
-              (project?.team.ownerId._id === session?.user?.id
+              (project?.team.adminId._id === session?.user?.id
                 ? ["overview", "tasks", "activity", "settings"]
                 : ["overview", "tasks", "activity"]) as TabType[]
             ).map((tab) => (
@@ -1749,7 +1750,7 @@ export default function ProjectDetailPage({
                     }
                     className="flex-1 px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isDeleting ? "Deleting..." : "Delete Account"}
+                    {isDeleting ? "Deleting..." : "confirm delete"}
                   </button>
                 ) : (
                   <button
@@ -1760,7 +1761,7 @@ export default function ProjectDetailPage({
                     }
                     className="flex-1 px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isDeleting ? "Deleting..." : "Delete Account"}
+                    {isDeleting ? "Deleting..." : "confirm delete"}
                     {terror && (
                       <div className="text-red-500 text-xs mt-2">
                         error deleting task
@@ -1769,9 +1770,9 @@ export default function ProjectDetailPage({
                   </button>
                 )}
 
-                {terror && (
+                {perror && (
                   <div className="text-red-500 text-xs mt-2">
-                    error deleting task
+                    error deleting project
                   </div>
                 )}
               </div>

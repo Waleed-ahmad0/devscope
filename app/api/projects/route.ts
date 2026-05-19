@@ -27,7 +27,7 @@ export async function GET(req: Request) {
 
     const userId = new mongoose.Types.ObjectId(session?.user?.id);
     const teams = await Team.find({
-      $or: [{ ownerId: userId }, { "members.user": userId }],
+      $or: [{ adminId: userId }, { "members.user": userId }],
     });
 
     const teamIds = teams.map((t) => t._id);

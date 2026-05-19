@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useSidebar } from "./SidebarContext";
 
 interface SearchResult {
   type: "project" | "team" | "task";
@@ -15,15 +16,18 @@ interface SearchResult {
 
 export default function Topbar() {
   const router = useRouter();
-    const { data: session } = useSession();
+  const { data: session } = useSession();
+  const { toggle } = useSidebar();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
-  const [allData, setAllData] = useState<{ projects: any[], teams: any[], tasks: any[] } | null>(null);
+  const [allData, setAllData] = useState<{ projects: any[]; teams: any[]; tasks: any[] } | null>(null);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
+  const mobileInputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Handle Cmd+K
@@ -35,7 +39,9 @@ export default function Topbar() {
       }
       if (e.key === "Escape") {
         inputRef.current?.blur();
+        mobileInputRef.current?.blur();
         setIsFocused(false);
+        setMobileSearchOpen(false);
       }
     };
     document.addEventListener("keydown", handleKeyDown);
@@ -46,10 +52,12 @@ export default function Topbar() {
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (
-        dropdownRef.current && 
+        dropdownRef.current &&
         !dropdownRef.current.contains(e.target as Node) &&
         inputRef.current &&
-        !inputRef.current.contains(e.target as Node)
+        !inputRef.current.contains(e.target as Node) &&
+        mobileInputRef.current &&
+        !mobileInputRef.current.contains(e.target as Node)
       ) {
         setIsFocused(false);
       }
@@ -57,6 +65,16 @@ export default function Topbar() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Auto-focus mobile input when search opens
+  useEffect(() => {
+    if (mobileSearchOpen) {
+      setTimeout(() => mobileInputRef.current?.focus(), 50);
+    } else {
+      setSearchQuery("");
+      setResults([]);
+    }
+  }, [mobileSearchOpen]);
 
   // Fetch data on focus
   const handleFocus = async () => {
@@ -70,7 +88,7 @@ export default function Topbar() {
         setAllData({
           projects: data.totalProjects || [],
           teams: data.allTeams || data.teamNames || [],
-          tasks: data.totaltaskforproject || data.totaltasks || []
+          tasks: data.totaltaskforproject || data.totaltasks || [],
         });
       } catch (error) {
         console.error("Failed to fetch search data:", error);
@@ -90,38 +108,38 @@ export default function Topbar() {
     const query = searchQuery.toLowerCase();
     const newResults: SearchResult[] = [];
 
-    allData.projects.forEach(p => {
+    allData.projects.forEach((p) => {
       if (p.name?.toLowerCase()?.includes(query) || p.description?.toLowerCase()?.includes(query)) {
         newResults.push({
           type: "project",
           id: p._id,
           title: p.name || "Untitled Project",
           subtitle: p.description?.substring(0, 50),
-          url: `/dashboard/projects/${p._id}`
+          url: `/dashboard/projects/${p._id}`,
         });
       }
     });
 
-    allData.teams.forEach(t => {
+    allData.teams.forEach((t) => {
       if (t.name?.toLowerCase()?.includes(query)) {
         newResults.push({
           type: "team",
           id: t._id,
           title: t.name || "Untitled Team",
           subtitle: "Team",
-          url: `/dashboard/teams/${t._id}`
+          url: `/dashboard/teams/${t._id}`,
         });
       }
     });
 
-    allData.tasks.forEach(t => {
+    allData.tasks.forEach((t) => {
       if (t.title?.toLowerCase()?.includes(query) || t.description?.toLowerCase()?.includes(query)) {
         newResults.push({
           type: "task",
           id: t._id,
           title: t.title || "Untitled Task",
           subtitle: t.status,
-          url: `/dashboard/projects/${t.projectId}`
+          url: `/dashboard/projects/${t.projectId}`,
         });
       }
     });
@@ -130,128 +148,271 @@ export default function Topbar() {
   }, [searchQuery, allData]);
 
   const userName = session?.user?.name || (session?.user as any)?.firstName || "John Doe";
-  const userInitials = userName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2) || "JD";
+  const userInitials = userName
+    .split(" ")
+    .map((n: string) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2) || "JD";
+
+  const SearchResultsList = ({ isMobile = false }: { isMobile?: boolean }) => (
+    <>
+      {isFocused && searchQuery.trim() && (
+        <div
+          className={`absolute left-0 right-0 mt-2 bg-white rounded-lg shadow-xl border border-slate-200 overflow-hidden z-50 ${
+            isMobile ? "top-full" : "top-full"
+          }`}
+        >
+          {loading ? (
+            <div className="p-4 text-center text-sm text-slate-500">Loading...</div>
+          ) : results.length > 0 ? (
+            <div className="max-h-80 overflow-y-auto">
+              {results.map((result, idx) => (
+                <Link
+                  key={`${result.type}-${result.id}-${idx}`}
+                  href={result.url}
+                  onClick={() => {
+                    setIsFocused(false);
+                    setSearchQuery("");
+                    setMobileSearchOpen(false);
+                  }}
+                  className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 border-b border-slate-100 last:border-0 transition-colors"
+                >
+                  <div
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                      result.type === "project"
+                        ? "bg-blue-100 text-blue-600"
+                        : result.type === "team"
+                        ? "bg-purple-100 text-purple-600"
+                        : "bg-amber-100 text-amber-600"
+                    }`}
+                  >
+                    {result.type === "project" && (
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                      </svg>
+                    )}
+                    {result.type === "team" && (
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                    )}
+                    {result.type === "task" && (
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                      </svg>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-slate-900 truncate">{result.title}</div>
+                    {result.subtitle && (
+                      <div className="text-xs text-slate-500 truncate capitalize">{result.subtitle}</div>
+                    )}
+                  </div>
+                  <div className="text-xs text-slate-400 capitalize bg-slate-100 px-2 py-1 rounded shrink-0">
+                    {result.type}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="p-4 text-center text-sm text-slate-500">
+              No results found for &quot;{searchQuery}&quot;
+            </div>
+          )}
+        </div>
+      )}
+    </>
+  );
 
   return (
-    <header className="h-16 bg-white border-b border-slate-200 fixed top-0 right-0 left-64 z-30">
-      <div className="h-full px-6 flex items-center justify-between gap-4">
-        {/* Left Section - Breadcrumb & Search */}
-        <div className="flex items-center gap-4 flex-1">
-          {/* Breadcrumb */}
-          <nav className="hidden lg:flex items-center text-sm">
-            <Link href="/dashboard" className="text-slate-600 hover:text-slate-900 transition-colors">
-              Dashboard
-            </Link>
-            <svg className="w-4 h-4 mx-2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-            </svg>
-            <span className="text-slate-900 font-medium">Overview</span>
-          </nav>
+    <>
+      {/* Main Topbar */}
+      <header className="h-16 bg-white border-b border-slate-200 fixed top-0 right-0 left-0 md:left-64 z-30 transition-[left] duration-300">
+        <div className="h-full px-3 sm:px-6 flex items-center justify-between gap-2 sm:gap-4">
 
-          <div className="hidden lg:block w-px h-6 bg-slate-200"></div>
+          {/* Left Section */}
+          <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
 
-          <div className="flex-1 max-w-xl">
-            <div className="relative" ref={dropdownRef}>
-              <svg 
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" 
-                fill="none" 
-                viewBox="0 0 24 24" 
-                stroke="currentColor" 
+            {/* Hamburger — mobile only (for sidebar toggle if needed) */}
+            <button
+              className="md:hidden flex items-center justify-center w-9 h-9 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors shrink-0"
+              aria-label="Open menu"
+              onClick={toggle}
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+
+            {/* Breadcrumb — desktop only */}
+            <nav className="hidden lg:flex items-center text-sm shrink-0">
+              <Link href="/dashboard" className="text-slate-600 hover:text-slate-900 transition-colors">
+                Dashboard
+              </Link>
+              <svg className="w-4 h-4 mx-2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+              <span className="text-slate-900 font-medium">Overview</span>
+            </nav>
+
+            <div className="hidden lg:block w-px h-6 bg-slate-200 shrink-0"></div>
+
+            {/* Desktop Search */}
+            <div className="hidden sm:block flex-1 max-w-xl">
+              <div className="relative" ref={dropdownRef}>
+                <svg
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={handleFocus}
+                  placeholder="Search projects, tasks, or teams... (Cmd+K)"
+                  className="w-full pl-10 pr-16 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-all"
+                />
+                {!isFocused && (
+                  <kbd className="hidden sm:inline-flex absolute right-2 top-1/2 -translate-y-1/2 items-center gap-1 px-2 py-1 bg-white border border-slate-200 rounded text-xs font-medium text-slate-500">
+                    <span className="text-xs">⌘</span>K
+                  </kbd>
+                )}
+                <SearchResultsList />
+              </div>
+            </div>
+          </div>
+
+          {/* Right Section */}
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+
+            {/* Mobile search icon */}
+            <button
+              className="sm:hidden flex items-center justify-center w-9 h-9 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors"
+              aria-label="Open search"
+              onClick={() => setMobileSearchOpen(true)}
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </button>
+
+            {/* User button */}
+            <button className="flex items-center gap-2 sm:gap-3 pl-1 sm:pl-2 pr-2 sm:pr-3 py-1.5 hover:bg-slate-100 rounded-lg transition-all group">
+              <div className="w-8 h-8 bg-linear-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center text-white font-semibold text-sm shrink-0">
+                {userInitials}
+              </div>
+              <div className="hidden lg:block text-left">
+                <div className="text-sm font-semibold text-slate-900 leading-none mb-0.5">{userName}</div>
+              </div>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Mobile Full-Screen Search Overlay */}
+      {mobileSearchOpen && (
+        <div className="sm:hidden fixed inset-0 z-50 bg-white flex flex-col">
+          {/* Search bar row */}
+          <div className="flex items-center gap-3 px-4 h-16 border-b border-slate-200 shrink-0">
+            <div className="relative flex-1">
+              <svg
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
                 strokeWidth="2"
               >
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
               <input
-                ref={inputRef}
+                ref={mobileInputRef}
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onFocus={handleFocus}
-                placeholder="Search projects, tasks, or teams... (Cmd+K)"
+                placeholder="Search projects, tasks, teams..."
                 className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-all"
               />
-              {!isFocused && (
-                <kbd className="hidden sm:inline-flex absolute right-2 top-1/2 -translate-y-1/2 items-center gap-1 px-2 py-1 bg-white border border-slate-200 rounded text-xs font-medium text-slate-500">
-                  <span className="text-xs">⌘</span>K
-                </kbd>
-              )}
-
-              {isFocused && searchQuery.trim() && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-xl border border-slate-200 overflow-hidden z-50">
-                  {loading ? (
-                    <div className="p-4 text-center text-sm text-slate-500">Loading...</div>
-                  ) : results.length > 0 ? (
-                    <div className="max-h-96 overflow-y-auto">
-                      {results.map((result, idx) => (
-                        <Link 
-                          key={`${result.type}-${result.id}-${idx}`}
-                          href={result.url}
-                          onClick={() => {
-                            setIsFocused(false);
-                            setSearchQuery("");
-                          }}
-                          className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 border-b border-slate-100 last:border-0 transition-colors"
-                        >
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                            result.type === 'project' ? 'bg-blue-100 text-blue-600' :
-                            result.type === 'team' ? 'bg-purple-100 text-purple-600' :
-                            'bg-amber-100 text-amber-600'
-                          }`}>
-                            {result.type === 'project' && (
-                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                              </svg>
-                            )}
-                            {result.type === 'team' && (
-                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                              </svg>
-                            )}
-                            {result.type === 'task' && (
-                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                              </svg>
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-sm font-medium text-slate-900 truncate">
-                              {result.title}
-                            </div>
-                            {result.subtitle && (
-                              <div className="text-xs text-slate-500 truncate capitalize">
-                                {result.subtitle}
-                              </div>
-                            )}
-                          </div>
-                          <div className="text-xs text-slate-400 capitalize bg-slate-100 px-2 py-1 rounded">
-                            {result.type}
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="p-4 text-center text-sm text-slate-500">
-                      No results found for &quot;{searchQuery}&quot;
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
+            <button
+              onClick={() => setMobileSearchOpen(false)}
+              className="text-sm font-medium text-blue-600 hover:text-blue-700 shrink-0 py-2 px-1"
+            >
+              Cancel
+            </button>
+          </div>
+
+          {/* Results area */}
+          <div className="flex-1 overflow-y-auto">
+            {loading ? (
+              <div className="p-6 text-center text-sm text-slate-500">Loading...</div>
+            ) : searchQuery.trim() && results.length > 0 ? (
+              results.map((result, idx) => (
+                <Link
+                  key={`mobile-${result.type}-${result.id}-${idx}`}
+                  href={result.url}
+                  onClick={() => {
+                    setMobileSearchOpen(false);
+                    setSearchQuery("");
+                    setIsFocused(false);
+                  }}
+                  className="flex items-center gap-3 px-4 py-3.5 hover:bg-slate-50 border-b border-slate-100 last:border-0 transition-colors"
+                >
+                  <div
+                    className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
+                      result.type === "project"
+                        ? "bg-blue-100 text-blue-600"
+                        : result.type === "team"
+                        ? "bg-purple-100 text-purple-600"
+                        : "bg-amber-100 text-amber-600"
+                    }`}
+                  >
+                    {result.type === "project" && (
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                      </svg>
+                    )}
+                    {result.type === "team" && (
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                    )}
+                    {result.type === "task" && (
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                      </svg>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-slate-900 truncate">{result.title}</div>
+                    {result.subtitle && (
+                      <div className="text-xs text-slate-500 truncate capitalize">{result.subtitle}</div>
+                    )}
+                  </div>
+                  <div className="text-xs text-slate-400 capitalize bg-slate-100 px-2 py-1 rounded shrink-0">
+                    {result.type}
+                  </div>
+                </Link>
+              ))
+            ) : searchQuery.trim() ? (
+              <div className="p-6 text-center text-sm text-slate-500">
+                No results found for &quot;{searchQuery}&quot;
+              </div>
+            ) : (
+              <div className="p-6 text-center text-sm text-slate-400">
+                Start typing to search...
+              </div>
+            )}
           </div>
         </div>
-
-        <div className="flex items-center gap-2">
-          
-          <button className="flex items-center gap-3 pl-2 pr-3 py-1.5 hover:bg-slate-100 rounded-lg transition-all group">
-            <div className="w-8 h-8 bg-linear-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center text-white font-semibold text-sm shrink-0">
-              {userInitials}
-            </div>
-            <div className="hidden lg:block text-left">
-              <div className="text-sm font-semibold text-slate-900 leading-none mb-0.5">{userName}</div>
-            </div>
-          </button>
-        </div>
-      </div>
-    </header>
+      )}
+    </>
   );
 }

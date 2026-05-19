@@ -45,7 +45,6 @@ export async function POST(req: NextRequest) {
     const createactivity = {
       userName: session?.user?.name?.trim() || session?.user?.firstName.trim(),
       userId: new mongoose.Types.ObjectId(session?.user?.id),
-      teamId: new mongoose.Types.ObjectId(body.team),
       projectId: new mongoose.Types.ObjectId(body.projectId),
       action: `Created task :"${body.title}"`,
       createdAt: new Date(),

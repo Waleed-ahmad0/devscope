@@ -17,7 +17,7 @@ interface members {
 interface teamformat {
   _id: string;
   name: string;
-  ownerId: string;
+  adminId: string;
   members: members[];
 }
 
@@ -123,7 +123,7 @@ export default function CreateProject({
   return (
     <>
       <div
-        className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-blue-950/45 backdrop-blur-md animate-[fadeIn_0.2s_ease]"
+        className="fixed inset-0 z-9999 flex items-center justify-center p-4 bg-blue-950/45 backdrop-blur-md animate-[fadeIn_0.2s_ease]"
         role="dialog"
         aria-modal="true"
         aria-labelledby="cp-title"
@@ -165,7 +165,7 @@ export default function CreateProject({
               </p>
             </div>
             <button
-              className="flex-shrink-0 w-8 h-8 rounded-lg border border-slate-200 bg-slate-50 text-slate-500 flex items-center justify-center cursor-pointer transition-all duration-150 mt-0.5 hover:bg-red-100 hover:border-red-300 hover:text-red-600"
+              className="shrink-0 w-8 h-8 rounded-lg border border-slate-200 bg-slate-50 text-slate-500 flex items-center justify-center cursor-pointer transition-all duration-150 mt-0.5 hover:bg-red-100 hover:border-red-300 hover:text-red-600"
               onClick={() => setIsOpen(false)}
               aria-label="Close"
             >
@@ -184,7 +184,7 @@ export default function CreateProject({
             </button>
           </div>
 
-          <div className="h-px mx-7 mt-[22px] bg-gradient-to-r from-transparent via-blue-200 to-transparent" />
+          <div className="h-px mx-7 mt-[22px] bg-linear-to-r from-transparent via-blue-200 to-transparent" />
 
           <form onSubmit={handleSubmit} noValidate>
             <div className="px-7 pt-[22px] pb-7 flex flex-col gap-[18px]">
@@ -207,7 +207,7 @@ export default function CreateProject({
                   placeholder="e.g. Marketing Dashboard"
                   autoComplete="off"
                   aria-describedby={errors.name ? "name-error" : undefined}
-                  className={`text-sm text-slate-900 bg-slate-50 border-[1.5px] rounded-[10px] px-3.5 py-2.5 transition-all duration-[180ms] outline-none w-full placeholder:text-slate-400
+                  className={`text-sm text-slate-900 bg-slate-50 border-[1.5px] rounded-[10px] px-3.5 py-2.5 transition-all duration-180 outline-none w-full placeholder:text-slate-400
                     focus:bg-white focus:shadow-[0_0_0_3px_rgba(59,130,246,0.12)]
                     hover:bg-white
                     ${
@@ -256,7 +256,7 @@ export default function CreateProject({
                   id="team"
                   value={formData.team}
                   onChange={handleChange}
-                  className="text-sm text-slate-900 bg-slate-50 border-[1.5px] border-slate-300 rounded-[10px] px-3.5 py-2.5 transition-all duration-[180ms] outline-none w-full cursor-pointer appearance-none
+                  className="text-sm text-slate-900 bg-slate-50 border-[1.5px] border-slate-300 rounded-[10px] px-3.5 py-2.5 transition-all duration-180 outline-none w-full cursor-pointer appearance-none
                     hover:border-blue-300 hover:bg-white
                     focus:border-blue-500 focus:bg-white focus:shadow-[0_0_0_3px_rgba(59,130,246,0.12)]"
                   style={{
@@ -272,10 +272,10 @@ export default function CreateProject({
                     <option
                       key={team._id}
                       value={team._id}
-                      disabled={team.ownerId !== session?.user?.id}
+                      disabled={team.adminId !== session?.user?.id}
                     >
                       {team.name}
-                      {team.ownerId !== session?.user?.id ? " (no access)" : ""}
+                      {team.adminId !== session?.user?.id ? " (no access)" : ""}
                     </option>
                   ))}
                 </select>
@@ -326,7 +326,7 @@ export default function CreateProject({
                   aria-describedby={
                     errors.description ? "desc-error" : undefined
                   }
-                  className={`text-sm text-slate-900 bg-slate-50 border-[1.5px] rounded-[10px] px-3.5 py-2.5 transition-all duration-[180ms] outline-none w-full resize-none h-24 placeholder:text-slate-400
+                  className={`text-sm text-slate-900 bg-slate-50 border-[1.5px] rounded-[10px] px-3.5 py-2.5 transition-all duration-180 outline-none w-full resize-none h-24 placeholder:text-slate-400
                     hover:bg-white
                     focus:bg-white focus:shadow-[0_0_0_3px_rgba(59,130,246,0.12)]
                     ${
@@ -373,7 +373,7 @@ export default function CreateProject({
               <button
                 type="submit"
                 disabled={isSubmitting || submitSuccess}
-                className="flex-1 text-sm font-bold text-white bg-gradient-to-br from-blue-600 to-blue-700 border-none rounded-[10px] px-[18px] py-[11px] cursor-pointer transition-all duration-[180ms] shadow-[0_2px_8px_rgba(37,99,235,0.35)] flex items-center justify-center gap-2 relative overflow-hidden
+                className="flex-1 text-sm font-bold text-white bg-linear-to-br from-blue-600 to-blue-700 border-none rounded-[10px] px-[18px] py-[11px] cursor-pointer transition-all duration-180 shadow-[0_2px_8px_rgba(37,99,235,0.35)] flex items-center justify-center gap-2 relative overflow-hidden
                   hover:from-blue-700 hover:to-blue-800
                   active:scale-[0.98]
                   disabled:opacity-70 disabled:cursor-not-allowed"

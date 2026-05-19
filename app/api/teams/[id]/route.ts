@@ -7,21 +7,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import activity from "@/models/activity";
 import Task from "@/models/tasks";
-export async function GET(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  try {
-    await dbConnect();
-    const { id } = await params;
-    const team = await Team.findById(id)
-      .populate("ownerId", "firstName lastName email")
-      .populate("members.user", "firstName lastName email");
-    return NextResponse.json(team, { status: 200 });
-  } catch (error) {
-    return NextResponse.json({ error }, { status: 500 });
-  }
-}
+import { NextServer } from "next/dist/server/next";
+
 interface members {
   user: string;
   role: string;
@@ -37,6 +24,22 @@ interface selectedmembers {
   role: string;
   _id: string;
 }
+export async function GET(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    await dbConnect();
+    const { id } = await params;
+    const team = await Team.findById(id)
+      .populate("adminId", "firstName lastName email")
+      .populate("members.user", "firstName lastName email");
+    return NextResponse.json(team, { status: 200 });
+  } catch (error) {
+    return NextResponse.json({ error }, { status: 500 });
+  }
+}
+
 export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -47,12 +50,10 @@ export async function PATCH(
     await dbConnect();
     const { id } = await params;
     const body = await req.json();
-    //
-
-    if (body.newOwner) {
-      const oldowner = await Team.findById(id);
-      //
-      const user = await User.findOne({ email: body.newOwner });
+    // console.log("body", body);
+    if (body.newadmin) {
+      const oldadmin = await Team.findById(id);
+      const user = await User.findOne({ email: body.newadmin });
       if (!user) {
         throw new Error("user not found");
       }
@@ -63,12 +64,12 @@ export async function PATCH(
       );
       await Team.findByIdAndUpdate(
         id,
-        { $push: { members: { user: oldowner.ownerId, role: "member" } } },
+        { $push: { members: { user: oldadmin.adminId, role: "member" } } },
         { new: true, runValidators: true },
       );
       const team = await Team.findByIdAndUpdate(
         id,
-        { $set: { ownerId: user._id } },
+        { $set: { adminId: user._id } },
         { new: true, runValidators: true },
       );
       const createactivity = {
@@ -76,7 +77,7 @@ export async function PATCH(
         userName: (session?.user?.name || session?.user?.firstName)?.trim(),
         teamId: new mongoose.Types.ObjectId(id),
         projectId: new mongoose.Types.ObjectId(body.projectId),
-        action: `Changed owner to :"${(user.firstName || user.name)?.trim()}"`,
+        action: `Changed admin to :"${(user.firstName || user.name)?.trim()}"`,
         createdAt: new Date(),
       };
       await activity.create(createactivity);
@@ -86,9 +87,8 @@ export async function PATCH(
     const membersData = await Promise.all(
       body.members.map(async (member: members) => {
         const user = await User.findOne({ email: member.user });
-
         if (!user) {
-          throw new Error(`User not found: ${member.user}`);
+          throw new Error(`user ${member.user} is not on devscope `);
         }
 
         return {
@@ -98,14 +98,15 @@ export async function PATCH(
         };
       }),
     );
-
     const members = membersData.map((m) => ({ user: m.user, role: m.role }));
+    console.log(members);
     const membersname = membersData.map((m) => m.name);
     const team = await Team.findByIdAndUpdate(
       id,
       { $push: { members: { $each: members } } },
       { new: true, runValidators: true },
     );
+    // console.log(team);
     const createactivity = {
       userName: session?.user?.name || session?.user?.firstName,
       userId: new mongoose.Types.ObjectId(session?.user?.id),
@@ -115,10 +116,14 @@ export async function PATCH(
       createdAt: new Date(),
     };
     await activity.create(createactivity);
-    //
+
     return NextResponse.json(team, { status: 200 });
   } catch (error) {
-    return NextResponse.json({ error }, { status: 500 });
+    // console.log(error );
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Server error" },
+      { status: 500 },
+    );
   }
 }
 
@@ -132,40 +137,48 @@ export async function DELETE(
     await dbConnect();
     const { id } = await params;
     const body = await req.json();
-    //
+
+    if (body.message === "exit") {
+      const team = await Team.findByIdAndUpdate(
+        id,
+        { $pull: { members: { user: { $in: body.userId } } } },
+        { new: true, runValidators: true },
+      );
+      return NextResponse.json(team, { status: 200 });
+    }
 
     const members = await Promise.all(
       body.selected.map(async (member: selectedmembers) => {
-        //
         const user = await User.findOne({ email: member.user.email });
-        //
+
         if (!user) {
           throw new Error(`User not found: ${member.user}`);
         }
         return {
           user: user._id,
           role: member.role,
+          name: user.firstName || user.name,
         };
       }),
     );
-    //
     const userIds = members.map(
       (m) => new mongoose.Types.ObjectId(m.user as string),
     );
-    //
+    const membersname = members.map((m) => m.name);
+
     const team = await Team.findByIdAndUpdate(
       id,
       { $pull: { members: { user: { $in: userIds } } } },
       { new: true, runValidators: true },
     );
-    //
+
     await Task.deleteMany({ assignedTo: { $in: userIds } });
     const createactivity = {
       userName: session?.user?.name || session?.user?.firstName,
       userId: new mongoose.Types.ObjectId(session?.user?.id),
       teamId: new mongoose.Types.ObjectId(id),
       projectId: new mongoose.Types.ObjectId(body.projectId),
-      action: `Removed member: "${body.selected}"`,
+      action: `Removed member: "${membersname.join(", ")}"`,
       createdAt: new Date(),
     };
     await activity.create(createactivity);

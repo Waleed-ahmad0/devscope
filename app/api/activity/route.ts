@@ -11,13 +11,14 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const projectId = searchParams.get("projectId");
     const userId = searchParams.get("userId");
+    const teamId = searchParams.get("teamId");
 
     if (userId && userId !== "undefined" && userId !== "null") {
       const getteams = await Team.find({
-        $or: [{ ownerId: userId }, { "members.user": userId }],
+        $or: [{ adminId: userId }, { "members.user": userId }],
       });
       const teamIds = getteams.map((t) => t._id);
-      // 
+      //
       const teamNames = getteams
         .slice(0, 2)
         .map(({ _id, name }) => ({ _id, name }));
@@ -31,9 +32,9 @@ export async function GET(req: Request) {
       const gettaskforproject = await Task.find({
         projectId: getprojectsId,
       });
-      // 
-      // 
-      // 
+      //
+      //
+      //
       const getactivitys = await activity
         .find({
           teamId: teamIds,
@@ -44,9 +45,7 @@ export async function GET(req: Request) {
         .populate("teamId", "name")
         .sort({ createdAt: -1 })
         .limit(3);
-      const activeprojects = getprojects.filter(
-        (p) => p.status === "Active"
-      );
+      const activeprojects = getprojects.filter((p) => p.status === "Active");
       return NextResponse.json(
         {
           message: "fetched activity",
@@ -57,18 +56,21 @@ export async function GET(req: Request) {
           activeProjects: activeprojects.length,
           totaltasks: gettask,
           totaltaskforproject: gettaskforproject,
-          allTeams: getteams
+          allTeams: getteams,
         },
         { status: 200 },
       );
     }
-    if (projectId) {
+    if (projectId && teamId) {
       const getactivity = await activity
         .find({
-          projectId: new mongoose.Types.ObjectId(projectId),
+          $or: [
+            { projectId: new mongoose.Types.ObjectId(projectId) },
+            { teamId: new mongoose.Types.ObjectId(teamId) },
+          ],
         })
         .populate("userId", "firstName email lastName");
-
+      
       return NextResponse.json(
         { message: "fetched activity", getactivity },
         { status: 200 },
@@ -76,8 +78,18 @@ export async function GET(req: Request) {
     }
 
     return NextResponse.json(
-      { message: "No valid userId or projectId provided", getactivitys: [], teamNames: [], totalTeams: 0, totalProjects: [], activeProjects: 0, totaltasks: [], totaltaskforproject: [], allTeams: [] },
-      { status: 400 }
+      {
+        message: "No valid userId or projectId provided",
+        getactivitys: [],
+        teamNames: [],
+        totalTeams: 0,
+        totalProjects: [],
+        activeProjects: 0,
+        totaltasks: [],
+        totaltaskforproject: [],
+        allTeams: [],
+      },
+      { status: 400 },
     );
   } catch (error) {
     return NextResponse.json(

@@ -208,6 +208,7 @@ export default function ProjectsPage() {
   }, [refreshKey]);
 
   const uniqueTeams = useMemo(() => {
+    console.log(projects)
     const names = Array.from(
       new Set(projects.map((p) => p.team?.name).filter(Boolean)),
     );
@@ -335,7 +336,7 @@ export default function ProjectsPage() {
                 Create your first project to get started
               </p>
               <button
-                className="inline-flex items-center gap-2 font-['Plus_Jakarta_Sans',sans-serif] text-sm font-bold text-white bg-gradient-to-br from-blue-600 to-blue-700 border-none rounded-lg py-2.5 px-5 cursor-pointer shadow-[0_2px_10px_rgba(37,99,235,0.3)] transition-all duration-150 hover:from-blue-700 hover:to-blue-800 hover:shadow-[0_4px_16px_rgba(37,99,235,0.38)] hover:-translate-y-px"
+                className="inline-flex items-center gap-2 font-['Plus_Jakarta_Sans',sans-serif] text-sm font-bold text-white bg-linear-to-br from-blue-600 to-blue-700 border-none rounded-lg py-2.5 px-5 cursor-pointer shadow-[0_2px_10px_rgba(37,99,235,0.3)] transition-all duration-150 hover:from-blue-700 hover:to-blue-800 hover:shadow-[0_4px_16px_rgba(37,99,235,0.38)] hover:-translate-y-px"
                 onClick={() => setcreateProject(true)}
               >
                 <svg
@@ -384,7 +385,7 @@ export default function ProjectsPage() {
               </p>
             </div>
             <button
-              className="inline-flex items-center gap-2 font-['Plus_Jakarta_Sans',sans-serif] text-sm font-bold text-white bg-gradient-to-br from-blue-600 to-blue-700 border-none rounded-lg py-2.5 px-5 cursor-pointer shadow-[0_2px_10px_rgba(37,99,235,0.3)] transition-all duration-150 hover:from-blue-700 hover:to-blue-800 hover:shadow-[0_4px_16px_rgba(37,99,235,0.38)] hover:-translate-y-px"
+              className="inline-flex items-center gap-2 font-['Plus_Jakarta_Sans',sans-serif] text-sm font-bold text-white bg-linear-to-br from-blue-600 to-blue-700 border-none rounded-lg py-2.5 px-5 cursor-pointer shadow-[0_2px_10px_rgba(37,99,235,0.3)] transition-all duration-150 hover:from-blue-700 hover:to-blue-800 hover:shadow-[0_4px_16px_rgba(37,99,235,0.38)] hover:-translate-y-px"
               onClick={() => setcreateProject(true)}
             >
               <svg
@@ -472,7 +473,7 @@ export default function ProjectsPage() {
                 </svg>
               </button>
               {teamDropdownOpen && (
-                <div className="absolute top-full left-0 min-w-[180px] bg-white border-[1.5px] border-slate-200 rounded-xl shadow-[0_8px_28px_rgba(0,0,0,0.1)] z-[100] overflow-hidden animate-[pp-in_0.15s_ease]">
+                <div className="absolute top-full left-0 min-w-[180px] bg-white border-[1.5px] border-slate-200 rounded-xl shadow-[0_8px_28px_rgba(0,0,0,0.1)] z-100 overflow-hidden animate-[pp-in_0.15s_ease]">
                   {["All", ...uniqueTeams].map((t) => (
                     <button
                       key={t}
@@ -567,12 +568,12 @@ export default function ProjectsPage() {
                     className="bg-white border-[1.5px] border-slate-200 rounded-xl p-5 cursor-pointer transition-all duration-200 ease relative overflow-hidden hover:border-blue-200 hover:shadow-[0_6px_24px_rgba(37,99,235,0.1)] hover:-translate-y-px"
                     style={{ "--pc": color } as React.CSSProperties}
                   >
-                    <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-[var(--pc,#2563eb)] opacity-0 transition-opacity duration-200 hover:opacity-100" />
+                    <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-(--pc,#2563eb) opacity-0 transition-opacity duration-200 hover:opacity-100" />
 
                     <div className="flex items-center justify-between gap-4 mb-4">
                       <div className="flex items-center gap-3.5 flex-1 min-w-0">
                         <div
-                          className="w-11 h-11 rounded-xl flex items-center justify-center text-sm font-extrabold text-white flex-shrink-0 tracking-tight"
+                          className="w-11 h-11 rounded-xl flex items-center justify-center text-sm font-extrabold text-white shrink-0 tracking-tight"
                           style={{ background: color }}
                         >
                           {projectInitials(project.name)}
@@ -652,7 +653,7 @@ export default function ProjectsPage() {
                       </div>
 
                       {/* right: open arrow */}
-                      <div className="flex items-center justify-center w-[34px] h-[34px] rounded-lg border-[1.5px] border-slate-200 text-slate-400 flex-shrink-0 transition-all duration-[0.15s] group-hover:bg-blue-50 group-hover:border-blue-200 group-hover:text-blue-600">
+                      <div className="flex items-center justify-center w-[34px] h-[34px] rounded-lg border-[1.5px] border-slate-200 text-slate-400 shrink-0 transition-all duration-150 group-hover:bg-blue-50 group-hover:border-blue-200 group-hover:text-blue-600">
                         <svg
                           width="18"
                           height="18"

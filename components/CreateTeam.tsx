@@ -16,7 +16,7 @@ onSuccess
   onSuccess?: () => void;
 }) {
   const {data} = useSession();
-  const owneremail= data?.user?.email 
+  const adminemail= data?.user?.email 
   const [name, setName] = useState("");
   const [members, setMembers] = useState<MemberInput[]>([]);
   const [errors, setErrors] = useState<{ name: string; members: string }>({
@@ -48,8 +48,8 @@ onSuccess
     e.preventDefault();
     // Only validate filled member rows
     const filledMembers = members.filter((m) => m.user.trim() !== "");
-    if (filledMembers.some((m) => m.user === owneremail )) {
-      setErrors({name: owneremail || " " ,members: "You cannot add yourself as a member" });
+    if (filledMembers.some((m) => m.user === adminemail )) {
+      setErrors({name: adminemail || " " ,members: "You cannot add yourself as a member" });
       return;
     }
     if (filledMembers.some((obj, index) => 
@@ -79,6 +79,7 @@ onSuccess
         }),
       });
       const data = await res.json();
+      console.log(data)
       if (res.ok) {
         onSuccess?.()
         setName("");
@@ -118,7 +119,7 @@ onSuccess
 
       {/* Modal */}
       <div className="relative w-full max-w-lg mx-4 animate-in fade-in zoom-in-95">
-        <div className="bg-gradient-to-br from-blue-50 to-white rounded-2xl shadow-xl border border-blue-100 p-8">
+        <div className="bg-linear-to-br from-blue-50 to-white rounded-2xl shadow-xl border border-blue-100 p-8">
           {/* Close button */}
           <button
             onClick={handleClose}
@@ -293,7 +294,7 @@ onSuccess
               <button
                 type="submit"
                 disabled={submitting}
-                className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                className="flex-1 bg-linear-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {submitting ? "Creating…" : "Create Team"}
               </button>
