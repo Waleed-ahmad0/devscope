@@ -186,7 +186,7 @@ export default function Sidebar() {
   return (
     <>
       {/* Desktop sidebar — hidden on mobile */}
-      <aside className="hidden md:flex fixed left-0 top-0 h-screen w-64 bg-white border-r border-slate-200 flex-col z-40">
+      <aside className="hidden md:flex fixed left-0 top-0 h-dvh w-64 bg-white border-r border-slate-200 flex-col z-40">
         <NavContent />
       </aside>
 
@@ -203,7 +203,7 @@ export default function Sidebar() {
 
       {/* Mobile slide-in drawer */}
       <aside
-        className={`md:hidden fixed left-0 top-0 h-screen w-72 bg-white border-r border-slate-200 z-50 flex flex-col shadow-2xl transition-transform duration-300 ease-in-out ${
+        className={`md:hidden fixed left-0 top-0 h-dvh w-72 bg-white border-r border-slate-200 z-50 flex flex-col shadow-2xl transition-transform duration-300 ease-in-out ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >

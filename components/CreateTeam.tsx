@@ -109,7 +109,7 @@ onSuccess
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center overflow-y-auto">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/40 backdrop-blur-sm"
@@ -117,8 +117,8 @@ onSuccess
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-lg mx-4 animate-in fade-in zoom-in-95">
-        <div className="bg-linear-to-br from-blue-50 to-white rounded-2xl shadow-xl border border-blue-100 p-8">
+      <div className="relative w-full max-w-lg mx-4 my-4 sm:my-0 animate-in fade-in zoom-in-95">
+        <div className="bg-linear-to-br from-blue-50 to-white rounded-2xl shadow-xl border border-blue-100 p-5 sm:p-8">
           {/* Close button */}
           <button
             onClick={handleClose}
@@ -140,8 +140,8 @@ onSuccess
           </button>
 
           {/* Header */}
-          <div className="mb-8">
-            <h2 className="text-3xl font-bold text-blue-900 mb-2">
+          <div className="mb-5 sm:mb-8">
+            <h2 className="text-2xl sm:text-3xl font-bold text-blue-900 mb-2">
               Create Team
             </h2>
             <p className="text-blue-600">
@@ -149,7 +149,7 @@ onSuccess
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
             {/* Team Name */}
             <div className="space-y-2">
               <label

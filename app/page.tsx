@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 export default function HomePage() {
   const session = useSession();
   const router = useRouter();
@@ -12,6 +12,7 @@ export default function HomePage() {
     }
   }, [router, session]);
   const currentYear = new Date().getFullYear();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
     <div className="overflow-x-hidden">
@@ -49,7 +50,7 @@ export default function HomePage() {
           <ul className="hidden md:flex items-center gap-8">
             <li>
               <Link
-                href="#about"
+                href="/about"
                 className="text-slate-600 hover:text-slate-900 font-medium text-[15px] transition-colors relative group"
               >
                 About
@@ -77,6 +78,7 @@ export default function HomePage() {
           <button
             className="md:hidden p-2 text-slate-900"
             aria-label="Toggle mobile menu"
+            onClick={() => setMobileMenuOpen((v) => !v)}
           >
             <svg
               width="24"
@@ -86,12 +88,48 @@ export default function HomePage() {
               stroke="currentColor"
               strokeWidth="2"
             >
-              <line x1="3" y1="12" x2="21" y2="12" />
-              <line x1="3" y1="6" x2="21" y2="6" />
-              <line x1="3" y1="18" x2="21" y2="18" />
+              {mobileMenuOpen ? (
+                <>
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                  <line x1="6" y1="18" x2="18" y2="6" />
+                </>
+              ) : (
+                <>
+                  <line x1="3" y1="12" x2="21" y2="12" />
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <line x1="3" y1="18" x2="21" y2="18" />
+                </>
+              )}
             </svg>
           </button>
         </nav>
+
+        {/* Mobile menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-slate-200 bg-white/95 backdrop-blur-md px-6 py-4 space-y-3 animate-[slideDown_0.2s_ease]">
+            <Link
+              href="/about"
+              className="block py-2.5 text-slate-700 font-medium hover:text-blue-600 transition-colors"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              About
+            </Link>
+            <Link
+              href="/login"
+              className="block py-2.5 text-slate-700 font-medium hover:text-blue-600 transition-colors"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Log in
+            </Link>
+            <Link
+              href="/register"
+              className="block w-full text-center py-2.5 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Get Started
+            </Link>
+          </div>
+        )}
       </header>
 
       <section className="relative pt-32 pb-20 lg:pt-40 lg:pb-24 overflow-hidden">
