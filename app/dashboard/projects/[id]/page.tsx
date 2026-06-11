@@ -677,9 +677,9 @@ export default function ProjectDetailPage({
             }
             className="w-full px-3 py-1.5 text-xs font-medium bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer hover:bg-slate-100 transition-colors"
           >
-            <option value="pending">📋 Move to pending</option>
-            <option value="in progress">🔄 Move to In Progress</option>
-            <option value="completed">✅ Move pendingne</option>
+            <option value="pending"> pending</option>
+            <option value="in progress">In Progress</option>
+            <option value="completed">completed</option>
           </select>
         </div>
       </div>
