@@ -1,13 +1,13 @@
 import { dbConnect } from "@/lib/mongodb";
 import mongoose from "mongoose";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import Team from "@/models/teams";
 import User from "@/models/users";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import activity from "@/models/activity";
 import Task from "@/models/tasks";
-import { NextServer } from "next/dist/server/next";
+import { requireTeamAdmin, requireTeamMember } from "@/lib/authorize";
 
 interface members {
   user: string;
@@ -24,6 +24,7 @@ interface selectedmembers {
   role: string;
   _id: string;
 }
+
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -31,9 +32,24 @@ export async function GET(
   try {
     await dbConnect();
     const { id } = await params;
+
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const check = await requireTeamMember(id, session.user.id);
+    if (!check.ok) {
+      return NextResponse.json(
+        { error: check.status === 404 ? "Team not found" : "Forbidden" },
+        { status: check.status },
+      );
+    }
+
     const team = await Team.findById(id)
       .populate("adminId", "firstName lastName email")
       .populate("members.user", "firstName lastName email");
+
     return NextResponse.json(team, { status: 200 });
   } catch (error) {
     return NextResponse.json({ error }, { status: 500 });
@@ -46,73 +62,81 @@ export async function PATCH(
 ) {
   try {
     const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     await dbConnect();
     const { id } = await params;
+
+    const check = await requireTeamAdmin(id, session.user.id);
+    if (!check.ok) {
+      return NextResponse.json(
+        { error: check.status === 404 ? "Team not found" : "Forbidden" },
+        { status: check.status },
+      );
+    }
+
     const body = await req.json();
+
     if (body.newadmin) {
-      const oldadmin = await Team.findById(id);
+      const team = await Team.findById(id);
+      if (!team) throw new Error("Team not found");
+
       const user = await User.findOne({ email: body.newadmin });
-      if (!user) {
-        throw new Error("user not found");
-      }
-      await Team.findByIdAndUpdate(
-        id,
-        { $pull: { members: { user: { $in: user._id } } } },
-        { new: true, runValidators: true },
+      if (!user) throw new Error("user not found");
+
+      const oldAdminId = team.adminId.toString();
+      const newAdminId = user._id.toString();
+
+      // Rebuild both users' membership entries in one go so `members`
+      // and `adminId` can't drift apart between the two updates.
+      team.members = team.members.filter(
+        (m: any) => ![oldAdminId, newAdminId].includes(m.user.toString()),
       );
-      await Team.findByIdAndUpdate(
-        id,
-        { $push: { members: { user: oldadmin.adminId, role: "member" } } },
-        { new: true, runValidators: true },
-      );
-      const team = await Team.findByIdAndUpdate(
-        id,
-        { $set: { adminId: user._id } },
-        { new: true, runValidators: true },
-      );
-      const createactivity = {
-        userId: new mongoose.Types.ObjectId(session?.user?.id),
-        userName: (session?.user?.name || session?.user?.firstName)?.trim(),
+      team.members.push({ user: oldAdminId, role: "member" } as any);
+      team.members.push({ user: newAdminId, role: "admin" } as any);
+      team.adminId = user._id;
+      await team.save();
+
+      await activity.create({
+        userId: new mongoose.Types.ObjectId(session.user.id),
+        userName: (session.user.name || session.user.firstName)?.trim(),
         teamId: new mongoose.Types.ObjectId(id),
-        projectId: new mongoose.Types.ObjectId(body.projectId),
+        projectId: body.projectId
+          ? new mongoose.Types.ObjectId(body.projectId)
+          : undefined,
         action: `Changed admin to :"${(user.firstName || user.name)?.trim()}"`,
         createdAt: new Date(),
-      };
-      await activity.create(createactivity);
+      });
+
       return NextResponse.json(team, { status: 200 });
     }
 
     const membersData = await Promise.all(
       body.members.map(async (member: members) => {
         const user = await User.findOne({ email: member.user });
-        if (!user) {
-          throw new Error(`user ${member.user} is not on devscope `);
-        }
-
-        return {
-          user: user._id,
-          role: member.role,
-          name: user.firstName || user.name,
-        };
+        if (!user) throw new Error(`user ${member.user} is not on devscope `);
+        return { user: user._id, role: member.role, name: user.firstName || user.name };
       }),
     );
     const members = membersData.map((m) => ({ user: m.user, role: m.role }));
     const membersname = membersData.map((m) => m.name);
+
     const team = await Team.findByIdAndUpdate(
       id,
       { $push: { members: { $each: members } } },
       { new: true, runValidators: true },
     );
-    const createactivity = {
-      userName: session?.user?.name || session?.user?.firstName,
-      userId: new mongoose.Types.ObjectId(session?.user?.id),
+
+    await activity.create({
+      userName: session.user.name || session.user.firstName,
+      userId: new mongoose.Types.ObjectId(session.user.id),
       teamId: new mongoose.Types.ObjectId(id),
-      projectId: new mongoose.Types.ObjectId(body.projectId),
+      projectId: body.projectId ? new mongoose.Types.ObjectId(body.projectId) : undefined,
       action: `Added member :"${membersname.join(", ")}"`,
       createdAt: new Date(),
-    };
-    await activity.create(createactivity);
+    });
 
     return NextResponse.json(team, { status: 200 });
   } catch (error) {
@@ -129,12 +153,25 @@ export async function DELETE(
 ) {
   try {
     const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     await dbConnect();
     const { id } = await params;
     const body = await req.json();
 
+    // Leaving a team yourself only requires being a member - check this
+    // case before the admin-only path below.
     if (body.message === "exit") {
+      const membership = await requireTeamMember(id, session.user.id);
+      if (!membership.ok) {
+        return NextResponse.json(
+          { error: membership.status === 404 ? "Team not found" : "Forbidden" },
+          { status: membership.status },
+        );
+      }
+
       const team = await Team.findByIdAndUpdate(
         id,
         { $pull: { members: { user: { $in: body.userId } } } },
@@ -143,23 +180,23 @@ export async function DELETE(
       return NextResponse.json(team, { status: 200 });
     }
 
+    // Removing OTHER members is admin-only.
+    const check = await requireTeamAdmin(id, session.user.id);
+    if (!check.ok) {
+      return NextResponse.json(
+        { error: check.status === 404 ? "Team not found" : "Forbidden" },
+        { status: check.status },
+      );
+    }
+
     const members = await Promise.all(
       body.selected.map(async (member: selectedmembers) => {
         const user = await User.findOne({ email: member.user.email });
-
-        if (!user) {
-          throw new Error(`User not found: ${member.user}`);
-        }
-        return {
-          user: user._id,
-          role: member.role,
-          name: user.firstName || user.name,
-        };
+        if (!user) throw new Error(`User not found: ${member.user}`);
+        return { user: user._id, role: member.role, name: user.firstName || user.name };
       }),
     );
-    const userIds = members.map(
-      (m) => new mongoose.Types.ObjectId(m.user as string),
-    );
+    const userIds = members.map((m) => new mongoose.Types.ObjectId(m.user as string));
     const membersname = members.map((m) => m.name);
 
     const team = await Team.findByIdAndUpdate(
@@ -169,15 +206,14 @@ export async function DELETE(
     );
 
     await Task.deleteMany({ assignedTo: { $in: userIds } });
-    const createactivity = {
-      userName: session?.user?.name || session?.user?.firstName,
-      userId: new mongoose.Types.ObjectId(session?.user?.id),
+    await activity.create({
+      userName: session.user.name || session.user.firstName,
+      userId: new mongoose.Types.ObjectId(session.user.id),
       teamId: new mongoose.Types.ObjectId(id),
-      projectId: new mongoose.Types.ObjectId(body.projectId),
+      projectId: body.projectId ? new mongoose.Types.ObjectId(body.projectId) : undefined,
       action: `Removed member: "${membersname.join(", ")}"`,
       createdAt: new Date(),
-    };
-    await activity.create(createactivity);
+    });
     return NextResponse.json(team, { status: 200 });
   } catch (error) {
     return NextResponse.json(
