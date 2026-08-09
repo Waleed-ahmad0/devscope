@@ -78,7 +78,7 @@ export default function ProjectDetailPage({
   const [projectStatus, setProjectStatus] = useState<string>("");
   const [showTaskForm, setShowTaskForm] = useState<boolean>(false);
   const [perror, setperror] = useState<boolean>(false);
-  const [isDeleting, setIsDeleting] = useState<boolean>(false);
+  const [isDeleting] = useState<boolean>(false);
   const [deleteid, setdeleteid] = useState<string>("");
   const [ShowDeleteModal, setShowDeleteModal] = useState<boolean>(false);
   const [terror, setterror] = useState<boolean>(false);
@@ -289,12 +289,10 @@ export default function ProjectDetailPage({
   };
   useEffect(() => {
     const getprojects = async () => {
-      setProjectLoading(true);
       try {
         const request = await fetch(`/api/projects/${id}`);
         const gettasks = await fetch(`/api/tasks/${id}`);
         if (!request.ok) {
-          setproject(null);
           setperror(true);
           setProjectLoading(false);
           return;

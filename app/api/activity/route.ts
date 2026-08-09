@@ -27,8 +27,11 @@ export async function GET(req: Request) {
       });
       const getprojectsId = getprojects.map((i) => i._id);
       const gettask = await Task.find({
-        assignedTo: new mongoose.Types.ObjectId(userId),
-      });
+  $or: [
+    { assignedTo: new mongoose.Types.ObjectId(userId) },
+    { assignedTo: { $exists: false } },  
+  ]
+});
       const gettaskforproject = await Task.find({
         projectId: getprojectsId,
       });

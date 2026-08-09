@@ -87,13 +87,14 @@ export default function DashboardPage() {
           settotalteams(data.totalTeams);
           settotalprojects(data?.activeProjects);
           setprojects(data.totalProjects);
-          settotaltask(data.totaltasks);
+          const ptasks = data.totaltasks.filter((t: Task) => t.status != "completed")
+          settotaltask(ptasks);
           setprojecttasks(data.totaltaskforproject);
         } catch (error: any) {
           console.error("Error fetching dashboard data:", error);
           setError(
             error?.message ||
-              "Something went wrong while loading your dashboard.",
+            "Something went wrong while loading your dashboard.",
           );
         } finally {
           setLoading(false);
@@ -576,6 +577,7 @@ export default function DashboardPage() {
             )}
           </div>
         </div>
+        
 
         <div className="bg-white border border-slate-200 rounded-[14px] flex flex-col overflow-hidden min-h-0">
           <div className="px-[18px] py-3.5 border-b border-slate-50 flex items-center justify-between shrink-0">
@@ -626,7 +628,7 @@ export default function DashboardPage() {
                         );
                         const diffDays = Math.round(
                           (dueStart.getTime() - todayStart.getTime()) /
-                            86400000,
+                          86400000,
                         );
                         const formatted = due.toLocaleDateString("en-US", {
                           month: "short",
@@ -937,8 +939,8 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <CreateTeam isOpen={createTeam} setIsOpen={setcreateTeam}  onSuccess={() => setRefreshKey(k => k + 1)} />
-      <CreateProject isOpen={createProject} setIsOpen={setcreateProject}  onSuccess={() => setRefreshKey(k => k + 1)}/>
+      <CreateTeam isOpen={createTeam} setIsOpen={setcreateTeam} onSuccess={() => setRefreshKey(k => k + 1)} />
+      <CreateProject isOpen={createProject} setIsOpen={setcreateProject} onSuccess={() => setRefreshKey(k => k + 1)} />
     </div>
   );
 }
