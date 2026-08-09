@@ -4,16 +4,109 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 export default function HomePage() {
+  function SkeletonBox({
+    w = "100%",
+    h = "16px",
+    radius = "6px",
+  }: {
+    w?: string;
+    h?: string;
+    radius?: string;
+  }) {
+    return (
+      <div
+        className="animate-pulse bg-linear-to-r from-slate-200 via-slate-100 to-slate-200 bg-size-[200%_100%]"
+        style={{ width: w, height: h, borderRadius: radius }}
+      />
+    );
+  }
+  const [loading, setloading] = useState(true)
   const session = useSession();
   const router = useRouter();
   useEffect(() => {
     if (session.status === "authenticated") {
       router.replace("/dashboard");
     }
+    if (session.status==="unauthenticated") {
+      setloading(false)
+    }
   }, [router, session]);
   const currentYear = new Date().getFullYear();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
+ if (loading ) {
+    return (
+      <div
+        className="h-auto bg-slate-50 grid gap-[18px] p-4 sm:p-6 sm:px-7"
+        style={{ gridTemplateRows: "auto auto 1fr" }}
+      >
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <SkeletonBox w="300px" h="30px" radius="8px" />
+            <div className="mt-2">
+              <SkeletonBox w="250px" h="14px" radius="4px" />
+            </div>
+          </div>
+          <div className="flex gap-2.5">
+            <SkeletonBox w="120px" h="38px" radius="10px" />
+            <SkeletonBox w="120px" h="38px" radius="10px" />
+          </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5 mt-4">
+          {[0, 1, 2].map((i) => (
+            <div
+              key={i}
+              className="bg-white border border-slate-200 rounded-[14px] p-[18px_20px] flex items-center gap-4"
+            >
+              <SkeletonBox w="46px" h="46px" radius="12px" />
+              <div className="flex-1">
+                <SkeletonBox w="60%" h="12px" radius="4px" />
+                <div className="mt-2">
+                  <SkeletonBox w="40%" h="30px" radius="6px" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div
+          className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_290px] gap-3.5 mt-4"
+        >
+          {[0, 1].map((i) => (
+            <div
+              key={i}
+              className="bg-white border border-slate-200 rounded-[14px] p-4 flex flex-col gap-4"
+            >
+              <SkeletonBox w="150px" h="20px" radius="6px" />
+              {[...Array(4)].map((_, j) => (
+                <div key={j} className="flex items-center gap-3">
+                  <SkeletonBox w="40px" h="40px" radius="10px" />
+                  <div className="flex-1 space-y-2">
+                    <SkeletonBox w="80%" h="14px" />
+                    <SkeletonBox w="50%" h="12px" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ))}
+          <div className="flex flex-col gap-3.5">
+            {[0, 1].map((i) => (
+              <div
+                key={i}
+                className="bg-white border border-slate-200 rounded-[14px] p-4 flex flex-col gap-4 min-h-[200px]"
+              >
+                <SkeletonBox w="120px" h="20px" radius="6px" />
+                {[...Array(3)].map((_, j) => (
+                  <div key={j} className="flex items-center gap-3">
+                    <SkeletonBox w="36px" h="36px" radius="8px" />
+                    <SkeletonBox w="70%" h="14px" />
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="overflow-x-hidden">
       <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200 transition-all duration-300">
@@ -176,9 +269,7 @@ export default function HomePage() {
           </div>
 
           <div className="relative max-w-5xl mx-auto mt-16 px-4 sm:px-6 lg:px-0 animate-fade-in-up animation-delay-500">
-            {/* Browser chrome */}
             <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-2xl transition-transform duration-300 hover:-translate-y-1">
-              {/* Title bar */}
               <div className="px-4 sm:px-5 py-3 bg-slate-100 border-b border-slate-200 flex items-center gap-2">
                 <span className="w-3 h-3 rounded-full bg-red-400" />
                 <span className="w-3 h-3 rounded-full bg-yellow-400" />
@@ -189,9 +280,7 @@ export default function HomePage() {
               </div>
 
               <div className="flex min-h-[420px] sm:min-h-[480px]">
-                {/* ── Sidebar ── */}
                 <aside className="hidden sm:flex w-44 bg-white border-r border-slate-200 flex-col shrink-0">
-                  {/* Logo */}
                   <div className="px-4 py-4 border-b border-slate-100 flex items-center gap-2">
                     <div className="w-6 h-6 bg-blue-600 rounded-md flex items-center justify-center">
                       <svg
@@ -213,7 +302,6 @@ export default function HomePage() {
                     </span>
                   </div>
 
-                  {/* Nav items */}
                   <nav className="px-2 py-3 flex flex-col gap-0.5">
                     {[
                       {
@@ -264,7 +352,6 @@ export default function HomePage() {
                     ))}
                   </nav>
 
-                  {/* Bottom user */}
                   <div className="mt-auto px-2 py-3 border-t border-slate-100">
                     <div className="flex items-center gap-2 px-2 py-2 rounded-lg">
                       <div className="w-6 h-6 rounded-full bg-blue-600 text-white text-[0.5rem] font-bold flex items-center justify-center shrink-0">
@@ -282,9 +369,7 @@ export default function HomePage() {
                   </div>
                 </aside>
 
-                {/* ── Main content ── */}
                 <div className="flex-1 flex flex-col bg-[#f8f9fc] overflow-hidden">
-                  {/* Topbar */}
                   <div className="bg-white border-b border-slate-200 px-4 py-2.5 flex items-center gap-2">
                     <div className="hidden sm:flex items-center gap-1 text-[0.65rem]">
                       <span className="text-slate-400">Dashboard</span>
@@ -465,14 +550,14 @@ export default function HomePage() {
                               color: "bg-orange-500",
                               name: "startup alpha",
                               meta: "1 task · Apr 29",
-                              progress: 0,
+                              progress: 50,
                             },
                             {
                               initials: "FY",
                               color: "bg-violet-600",
                               name: "final year project",
                               meta: "1 task · 3d ago",
-                              progress: 0,
+                              progress: 80,
                             },
                           ].map((p) => (
                             <div

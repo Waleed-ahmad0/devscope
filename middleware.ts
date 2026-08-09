@@ -10,9 +10,7 @@ export const middleware = withAuth(
             async authorized({ req, token }) {
                 const { pathname } = req.nextUrl;
 
-                // Only log page visits, skip API calls
-                if (!pathname.startsWith('/')) {
-                }
+                
 
                 if (
                     pathname.endsWith("/api/auth") ||
@@ -34,6 +32,8 @@ export const middleware = withAuth(
 );
 
 export const config = {
-    matcher: [
-        "/dashboard/:path*"],
+  matcher: [
+    "/dashboard/:path*",
+    "/api/((?!auth).*)",
+  ],
 };

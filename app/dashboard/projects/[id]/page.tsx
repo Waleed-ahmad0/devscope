@@ -228,30 +228,27 @@ export default function ProjectDetailPage({
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      if (taskForm.assignedTo === "") {
-        const { assignedTo, ...rest } = taskForm;
-        setShowTaskForm(false);
-      } else {
-        const res = await fetch(`/api/tasks/${id}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ...taskForm,
-            projectId: id,
-          }),
-        });
-        const created = await res.json();
-        setrefresh((prev) => !prev);
-        setTaskForm({
-          title: "",
-          description: "",
-          status: "pending",
-          projectid: id,
-          Duedate: "",
-          assignedTo: "",
-        });
-        setShowTaskForm(false);
-      }
+      const { assignedTo, ...rest } = taskForm;
+      const payload = taskForm.assignedTo === ""
+        ? { ...rest, projectId: id }
+        : { ...taskForm, projectId: id };
+
+      const res = await fetch(`/api/tasks/${id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const created = await res.json();
+      setrefresh((prev) => !prev);
+      setTaskForm({
+        title: "",
+        description: "",
+        status: "pending",
+        projectid: id,
+        Duedate: "",
+        assignedTo: "",
+      });
+      setShowTaskForm(false);
     } catch (err) {
       console.error("Failed to create task:", err);
     } finally {
