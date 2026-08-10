@@ -524,7 +524,7 @@ export default function TeamDetailPage({
                 Total Members
               </div>
               <div className="text-[26px] font-extrabold text-slate-900">
-                {team.members.length + 1}
+                {team.members.length}
               </div>
             </div>
 
@@ -620,27 +620,8 @@ export default function TeamDetailPage({
               )}
             </div>
 
-            {/* adminrow */}
-            <div className="flex items-center justify-between px-6 py-3.5 border-b border-slate-50 transition-colors duration-150 hover:bg-slate-50">
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center text-[13px] font-bold text-white shrink-0 tracking-wide"
-                  style={{ background: avatarColor(team.adminId.email) }}
-                >
-                  {initials(team.adminId.firstName, team.adminId.lastName)}
-                </div>
-                <div>
-                  <div className="text-sm font-semibold text-slate-900">
-                    {team.adminId.firstName} {team.adminId.lastName}
-                  </div>
-                </div>
-              </div>
-              <span className="inline-flex items-center px-2.5 py-[3px] rounded-full text-[11.5px] font-bold tracking-wide capitalize bg-amber-100 text-amber-900">
-                admin
-              </span>
-            </div>
+            
 
-            {/* Member rows */}
             {team.members.length === 0 ? (
               <div className="text-center py-7 text-slate-400 text-[13.5px]">
                 No additional members yet. Add someone to get started.

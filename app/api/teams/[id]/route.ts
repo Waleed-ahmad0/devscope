@@ -174,7 +174,7 @@ export async function DELETE(
 
       const team = await Team.findByIdAndUpdate(
         id,
-        { $pull: { members: { user: { $in: body.userId } } } },
+        { $pull: { members: { user: session.user.id } } },
         { new: true, runValidators: true },
       );
       return NextResponse.json(team, { status: 200 });

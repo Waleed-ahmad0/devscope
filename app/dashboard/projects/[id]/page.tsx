@@ -1106,13 +1106,10 @@ export default function ProjectDetailPage({
                       className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
                     >
                       <option value="">Open Tasks</option>
-                      <option value={project?.team.adminId._id}>
-                        {project?.team.adminId.firstName}{" "}
-                        {project?.team.adminId.lastName} (Admin)
-                      </option>
+                      
                       {project?.team.members.map((member) => (
                         <option value={member.user} key={member._id}>
-                          {member.userName}
+                          {member.userName} ({member.role})
                         </option>
                       ))}
                     </select>

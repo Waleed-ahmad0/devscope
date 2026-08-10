@@ -87,7 +87,12 @@ export async function PATCH(
       );
     }
 
-    const project = await Project.findByIdAndUpdate(id, body, { new: true });
+    const { name, description, status } = body;
+    const project = await Project.findByIdAndUpdate(
+      id,
+      { name, description, status },
+      { new: true },
+    );
     if (project) {
       await Activity.create({
         userId: new mongoose.Types.ObjectId(session.user.id),

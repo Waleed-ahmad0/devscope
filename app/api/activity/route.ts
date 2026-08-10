@@ -5,50 +5,49 @@ import mongoose from "mongoose";
 import Team from "@/models/teams";
 import Project from "@/models/projects";
 import Task from "@/models/tasks";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
+import { requireTeamMember } from "@/lib/authorize";
+
 export async function GET(req: Request) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
     await dbConnect();
     const { searchParams } = new URL(req.url);
     const projectId = searchParams.get("projectId");
-    const userId = searchParams.get("userId");
     const teamId = searchParams.get("teamId");
+    const wantsOwnDashboard = searchParams.get("userId"); // presence just selects this branch
 
-    if (userId && userId !== "undefined" && userId !== "null") {
+    if (wantsOwnDashboard) {
+      // Always the CALLER's own data - never the client-supplied value.
+      const userObjectId = new mongoose.Types.ObjectId(session.user.id);
+
       const getteams = await Team.find({
-        $or: [{ adminId: userId }, { "members.user": userId }],
+        $or: [{ adminId: userObjectId }, { "members.user": userObjectId }],
       });
       const teamIds = getteams.map((t) => t._id);
-      //
-      const teamNames = getteams
-        .slice(0, 2)
-        .map(({ _id, name }) => ({ _id, name }));
-      const getprojects = await Project.find({
-        team: teamIds,
-      });
+      const teamNames = getteams.slice(0, 2).map(({ _id, name }) => ({ _id, name }));
+
+      const getprojects = await Project.find({ team: { $in: teamIds } });
       const getprojectsId = getprojects.map((i) => i._id);
-      const gettask = await Task.find({
-  $or: [
-    { assignedTo: new mongoose.Types.ObjectId(userId) },
-    { assignedTo: { $exists: false } },  
-  ]
-});
-      const gettaskforproject = await Task.find({
-        projectId: getprojectsId,
-      });
-      //
-      //
-      //
+
+      const gettask = await Task.find({ assignedTo: userObjectId });
+      const gettaskforproject = await Task.find({ projectId: { $in: getprojectsId } });
+
       const getactivitys = await activity
-        .find({
-          teamId: teamIds,
-        })
-        // .populate("userId", "firstName email")
+        .find({ teamId: { $in: teamIds } })
         .populate("projectId", "name")
         .populate("taskId", "title createdAt")
         .populate("teamId", "name")
         .sort({ createdAt: -1 })
         .limit(3);
+
       const activeprojects = getprojects.filter((p) => p.status === "Active");
+
       return NextResponse.json(
         {
           message: "fetched activity",
@@ -64,7 +63,16 @@ export async function GET(req: Request) {
         { status: 200 },
       );
     }
+
     if (projectId && teamId) {
+      const check = await requireTeamMember(teamId, session.user.id);
+      if (!check.ok) {
+        return NextResponse.json(
+          { message: check.status === 404 ? "Team not found" : "Forbidden" },
+          { status: check.status },
+        );
+      }
+
       const getactivity = await activity
         .find({
           $or: [
@@ -73,11 +81,8 @@ export async function GET(req: Request) {
           ],
         })
         .populate("userId", "firstName email lastName");
-      
-      return NextResponse.json(
-        { message: "fetched activity", getactivity },
-        { status: 200 },
-      );
+
+      return NextResponse.json({ message: "fetched activity", getactivity }, { status: 200 });
     }
 
     return NextResponse.json(
@@ -96,7 +101,7 @@ export async function GET(req: Request) {
     );
   } catch (error) {
     return NextResponse.json(
-      { message: "failed to fetch activity", error },
+      { message: "failed to fetch activity", error: String(error) },
       { status: 500 },
     );
   }

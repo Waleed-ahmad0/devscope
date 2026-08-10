@@ -51,15 +51,17 @@ return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
 export async function DELETE(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    const teams = await Team.find({
-      $or: [{ ownerId: (session?.user?.id)?.trim() }, { "members.user": (session?.user?.id)?.trim() }],
-    });
-    const teamIds = teams.map((team) => team._id);
-    if (!session) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
     await dbConnect();
-    const user = await User.findByIdAndDelete(session.user.id)
+    const userId = session.user.id.trim();
+    const teams = await Team.find({
+      $or: [{ ownerId: userId }, { "members.user": userId }],
+    });
+    const teamIds = teams.map((team) => team._id);
+    const user = await User.findByIdAndDelete(userId)
     
     if (!user) {
       throw new Error("User not found");
