@@ -298,12 +298,10 @@ export default function DashboardPage() {
             </span>{" "}
             👋
           </h1>
-          {/* <div onClick={() => { signOut() }}>hello</div> */}
           <p className="hidden sm:block text-sm text-slate-500 m-0">
             Here's what's happening with your projects today.
           </p>
         </div>
-        {/* Desktop: full buttons */}
         <div className="hidden sm:flex items-center gap-2.5">
           <button
             onClick={() => setcreateTeam(true)}
@@ -347,7 +345,6 @@ export default function DashboardPage() {
           </button>
         </div>
 
-        {/* Mobile: single "+" button with dropdown */}
         <div className="sm:hidden relative" ref={quickMenuRef}>
           <button
             onClick={() => setQuickMenuOpen((v) => !v)}
@@ -521,26 +518,30 @@ export default function DashboardPage() {
                   "#d97706",
                   "#db2777",
                 ];
+
+                // Fixed hash function (was missing semicolon and had weird syntax)
                 let h = 0;
-                for (const c of project._id)
+                for (const c of project._id) {
                   h = c.charCodeAt(0) + ((h << 5) - h);
+                }
                 const color = palette[Math.abs(h) % palette.length];
                 const prog = taskprogress(project._id);
+
                 return (
                   <Link
                     key={project._id}
                     href={`/dashboard/projects/${project._id}`}
-                    className="flex items-center gap-3 px-[18px] py-3 border-b border-slate-50 last:border-b-0 no-underline transition-colors duration-120 hover:bg-slate-50 group"
+                    className="flex items-center gap-3 px-[18px] py-3 border-b border-slate-100 last:border-b-0 no-underline transition-colors duration-150 hover:bg-slate-50/80 group"
                   >
                     <div
                       className="w-10 h-10 rounded-[10px] flex items-center justify-center text-[13px] font-extrabold text-white shrink-0"
-                      style={{ background: color }}
+                      style={{ backgroundColor: color }}  // Changed from "background" to "backgroundColor"
                     >
-                      {project.name.slice(0, 2).toUpperCase()}
+                      {project.name?.slice(0, 2).toUpperCase() || "PR"}  {/* Added optional chaining */}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-bold text-slate-900 truncate group-hover:text-blue-600 transition-colors">
-                        {project.name}
+                      <div className="text-sm font-bold text-slate-800 truncate group-hover:text-blue-600 transition-colors">
+                        {project.name || "Untitled"}  {/* Added fallback */}
                       </div>
                       <div className="text-xs text-slate-400 mt-0.5">
                         {taskfilter(project._id)} tasks ·{" "}
@@ -551,11 +552,10 @@ export default function DashboardPage() {
                       <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
                         <div
                           className="h-full rounded-full transition-all duration-500"
-                          style={{ width: `${prog}%`, background: color }}
                         />
                       </div>
                       <span className="text-xs font-bold text-slate-500 w-9 text-right shrink-0">
-                        {prog}%
+                      
                       </span>
                     </div>
                     <svg
@@ -567,7 +567,7 @@ export default function DashboardPage() {
                       strokeWidth="2.5"
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      className="shrink-0"
+                      className="shrink-0 group-hover:stroke-blue-400 transition-colors" 
                     >
                       <path d="M9 5l7 7-7 7" />
                     </svg>
@@ -577,7 +577,7 @@ export default function DashboardPage() {
             )}
           </div>
         </div>
-        
+
 
         <div className="bg-white border border-slate-200 rounded-[14px] flex flex-col overflow-hidden min-h-0">
           <div className="px-[18px] py-3.5 border-b border-slate-50 flex items-center justify-between shrink-0">

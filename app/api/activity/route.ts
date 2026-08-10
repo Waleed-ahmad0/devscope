@@ -20,10 +20,9 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const projectId = searchParams.get("projectId");
     const teamId = searchParams.get("teamId");
-    const wantsOwnDashboard = searchParams.get("userId"); // presence just selects this branch
+    const wantsOwnDashboard = searchParams.get("userId"); 
 
     if (wantsOwnDashboard) {
-      // Always the CALLER's own data - never the client-supplied value.
       const userObjectId = new mongoose.Types.ObjectId(session.user.id);
 
       const getteams = await Team.find({

@@ -363,11 +363,7 @@ export default function ProjectDetailPage({
           teamId: project?.team._id,
         }),
       });
-      const updateprojecttime = await fetch(`/api/projects`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ time: new Date(), id: id }),
-      });
+     
       setrefresh((prev) => !prev);
       if (!res.ok) throw new Error("Failed to update status");
     } catch (err) {

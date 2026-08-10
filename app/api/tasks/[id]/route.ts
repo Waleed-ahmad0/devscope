@@ -92,3 +92,59 @@ export async function DELETE(
     );
   }
 }
+
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
+    const { id: projectId } = await params;
+
+    const check = await requireProjectMember(projectId, session.user.id);
+    if (!check.ok) {
+      return NextResponse.json(
+        { message: check.status === 404 ? "Project not found" : "Forbidden" },
+        { status: check.status },
+      );
+    }
+
+    const body = await req.json();
+    
+    const sendingtask = {
+      ...body,
+      projectId: new mongoose.Types.ObjectId(projectId),
+      createdBy: session.user.name?.trim() || session.user.firstName?.trim() || "Unknown",
+    };
+
+    if (body.assignedTo === "") {
+      delete sendingtask.assignedTo;
+    }
+
+    await dbConnect();
+    const task = await Task.create(sendingtask);
+
+
+    if (body.team) {
+      await activity.create({
+        userName: session.user.name?.trim() || session.user.firstName?.trim() || "Unknown",
+        userId: new mongoose.Types.ObjectId(session.user.id),
+        teamId: new mongoose.Types.ObjectId(body.team),
+        projectId: new mongoose.Types.ObjectId(projectId),
+        action: `Created task :"${body.title}"`,
+        createdAt: new Date(),
+      });
+    }
+
+    return NextResponse.json({ message: "task created successfully", task }, { status: 201 });
+  } catch (error) {
+    return NextResponse.json(
+      { message: "failed to create task", error: String(error) },
+      { status: 500 }
+    );
+  }
+}

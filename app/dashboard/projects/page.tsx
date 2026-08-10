@@ -182,7 +182,7 @@ export default function ProjectsPage() {
         const ttaskbyproject: Record<string, number> = {};
         for (const project of data) {
           const projectTasks = allTasks.filter(
-            (task: any) => task.project === project.name,
+            (task: any) => task.projectId === project._id,
           );
           ttaskbyproject[project.name] = projectTasks.length;
           progressByProject[project.name] =

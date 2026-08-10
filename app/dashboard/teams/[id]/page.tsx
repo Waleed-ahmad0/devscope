@@ -528,7 +528,6 @@ export default function TeamDetailPage({
               </div>
             </div>
 
-            {/* admin*/}
             <div className="bg-white border border-slate-200 rounded-2xl p-[22px] transition-all duration-200 hover:shadow-[0_4px_20px_rgba(37,99,235,.1)] hover:-translate-y-0.5">
               <div className="w-[42px] h-[42px] rounded-xl flex items-center justify-center mb-3.5 bg-indigo-50">
                 <svg
@@ -552,7 +551,6 @@ export default function TeamDetailPage({
               </div>
             </div>
 
-            {/* Created */}
             <div className="bg-white border border-slate-200 rounded-2xl p-[22px] transition-all duration-200 hover:shadow-[0_4px_20px_rgba(37,99,235,.1)] hover:-translate-y-0.5">
               <div className="w-[42px] h-[42px] rounded-xl flex items-center justify-center mb-3.5 bg-green-50">
                 <svg
@@ -586,7 +584,6 @@ export default function TeamDetailPage({
             </div>
           </div>
 
-          {/* ── MEMBERS PANEL ── */}
           <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
             <div className="px-6 py-[18px] border-b border-slate-100 flex items-center justify-between">
               <div className="flex items-center">

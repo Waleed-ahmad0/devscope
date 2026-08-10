@@ -89,8 +89,7 @@ export async function PATCH(
       const oldAdminId = team.adminId.toString();
       const newAdminId = user._id.toString();
 
-      // Rebuild both users' membership entries in one go so `members`
-      // and `adminId` can't drift apart between the two updates.
+
       team.members = team.members.filter(
         (m: any) => ![oldAdminId, newAdminId].includes(m.user.toString()),
       );
@@ -161,8 +160,7 @@ export async function DELETE(
     const { id } = await params;
     const body = await req.json();
 
-    // Leaving a team yourself only requires being a member - check this
-    // case before the admin-only path below.
+
     if (body.message === "exit") {
       const membership = await requireTeamMember(id, session.user.id);
       if (!membership.ok) {
@@ -180,7 +178,6 @@ export async function DELETE(
       return NextResponse.json(team, { status: 200 });
     }
 
-    // Removing OTHER members is admin-only.
     const check = await requireTeamAdmin(id, session.user.id);
     if (!check.ok) {
       return NextResponse.json(
