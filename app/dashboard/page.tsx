@@ -299,7 +299,7 @@ export default function DashboardPage() {
           <h1 className="text-[20px] sm:text-[26px] font-extrabold text-slate-900 tracking-tight mb-[3px]">
             Good morning,{" "}
             <span className="text-blue-600">
-{user?.firstName} {user?.lastName}
+              {user?.firstName} {user?.lastName}
             </span>{" "}
             👋
           </h1>
@@ -523,58 +523,60 @@ export default function DashboardPage() {
                   "#d97706",
                   "#db2777",
                 ];
-
                 let h = 0;
-                for (const c of project._id) {
+                for (const c of project._id)
                   h = c.charCodeAt(0) + ((h << 5) - h);
-                }
                 const color = palette[Math.abs(h) % palette.length];
                 const prog = taskprogress(project._id);
-
                 return (
                   <Link
                     key={project._id}
                     href={`/dashboard/projects/${project._id}`}
-                    className="flex items-center gap-3 px-[18px] py-3 border-b border-slate-100 last:border-b-0 no-underline transition-colors duration-150 hover:bg-slate-50/80 group"
+                    className="flex items-center gap-3  px-[18px] py-3 border-b border-slate-50 last:border-b-0 no-underline transition-colors duration-120 hover:bg-slate-50 group"
                   >
                     <div
-                      className="w-10 h-10 rounded-[10px] flex items-center justify-center text-[13px] font-extrabold text-white shrink-0"
-                      style={{ backgroundColor: color }}
+                      className="w-10 h-10 rounded-[10px] flex items-center flex-col justify-center text-[13px] font-extrabold text-white shrink-0"
+                      style={{ background: color }}
                     >
-                      {project.name?.slice(0, 2).toUpperCase() || "PR"}
+                      {project.name.slice(0, 2).toUpperCase()}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-bold text-slate-800 truncate group-hover:text-blue-600 transition-colors">
-                        {project.name || "Untitled"}
-                      </div>
-                      <div className="text-xs text-slate-400 mt-0.5">
-                        {taskfilter(project._id)} tasks ·{" "}
-                        {getRelativeTime(project.createdAt)}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                        <div
-                          className="h-full rounded-full transition-all duration-500"
-                        />
-                      </div>
-                      <span className="text-xs font-bold text-slate-500 w-9 text-right shrink-0">
+                    <div className="flex flex-col">
 
-                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-bold text-slate-900 truncate group-hover:text-blue-600 transition-colors">
+                          {project.name}
+                        </div>
+                        <div className="text-xs text-slate-400 mt-0.5">
+                          {taskfilter(project._id)} tasks ·{" "}
+                          {getRelativeTime(project.createdAt)}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                          <div
+                            className="h-full rounded-full transition-all duration-500"
+                            style={{ width: `${prog}%`, background: color }}
+                          />
+                        </div>
+                        <span className="text-xs font-bold text-slate-500 w-9 text-right shrink-0">
+                          {prog}%
+                        </span>
+                      </div>
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="#cbd5e1"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="shrink-0"
+                      >
+                        <path d="M9 5l7 7-7 7" />
+                      </svg>
                     </div>
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="#cbd5e1"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="shrink-0 group-hover:stroke-blue-400 transition-colors"
-                    >
-                      <path d="M9 5l7 7-7 7" />
-                    </svg>
+
                   </Link>
                 );
               })
