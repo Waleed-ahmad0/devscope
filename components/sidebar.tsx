@@ -2,20 +2,36 @@
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSidebar } from "../components/SidebarContext";
-
+interface UserInterface {
+  firstName?: string;
+  lastName?: string;
+}
 export default function Sidebar() {
   const { data: session } = useSession();
   const pathname = usePathname();
   const { isOpen, close } = useSidebar();
+  const [user, setuser] = useState<UserInterface>()
 
-  // Close on route change
   useEffect(() => {
     close();
   }, [pathname]);
+  useEffect(() => {
 
-  // Lock body scroll when open
+    const getuserfunc = async () => {
+      const getuser = await fetch('/api/user')
+      const response = await getuser.json()
+      if (response) {
+        setuser(response)
+      }
+      console.log(response)
+
+    }
+    getuserfunc()
+
+  }, [])
+
   useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "";
     return () => {
@@ -23,8 +39,7 @@ export default function Sidebar() {
     };
   }, [isOpen]);
 
-  const userName =
-    session?.user?.name || (session?.user as any)?.firstName || "User";
+  const userName = user?.firstName || user?.lastName || 'user'
   const userInitials = userName
     .split(" ")
     .map((n: string) => n[0])
@@ -134,18 +149,16 @@ export default function Sidebar() {
               <li key={href}>
                 <Link
                   href={href}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group ${
-                    active
-                      ? "bg-blue-50 text-blue-700"
-                      : "text-slate-700 hover:bg-slate-100 hover:text-slate-900"
-                  }`}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group ${active
+                    ? "bg-blue-50 text-blue-700"
+                    : "text-slate-700 hover:bg-slate-100 hover:text-slate-900"
+                    }`}
                 >
                   <svg
-                    className={`w-5 h-5 transition-colors shrink-0 ${
-                      active
-                        ? "text-blue-600"
-                        : "text-slate-500 group-hover:text-blue-600"
-                    }`}
+                    className={`w-5 h-5 transition-colors shrink-0 ${active
+                      ? "text-blue-600"
+                      : "text-slate-500 group-hover:text-blue-600"
+                      }`}
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -194,18 +207,16 @@ export default function Sidebar() {
       <div
         onClick={close}
         aria-hidden="true"
-        className={`md:hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-40 transition-opacity duration-300 ${
-          isOpen
-            ? "opacity-100 pointer-events-auto"
-            : "opacity-0 pointer-events-none"
-        }`}
+        className={`md:hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-40 transition-opacity duration-300 ${isOpen
+          ? "opacity-100 pointer-events-auto"
+          : "opacity-0 pointer-events-none"
+          }`}
       />
 
       {/* Mobile slide-in drawer */}
       <aside
-        className={`md:hidden fixed left-0 top-0 h-dvh w-72 bg-white border-r border-slate-200 z-50 flex flex-col shadow-2xl transition-transform duration-300 ease-in-out ${
-          isOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className={`md:hidden fixed left-0 top-0 h-dvh w-72 bg-white border-r border-slate-200 z-50 flex flex-col shadow-2xl transition-transform duration-300 ease-in-out ${isOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
       >
         {/* ✕ close button */}
         <button

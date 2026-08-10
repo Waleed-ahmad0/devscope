@@ -13,7 +13,10 @@ interface SearchResult {
   subtitle?: string;
   url: string;
 }
-
+interface UserInterface {
+  firstName?: string;
+  lastName?: string;
+}
 export default function Topbar() {
   const router = useRouter();
   const { data: session } = useSession();
@@ -25,13 +28,24 @@ export default function Topbar() {
   const [loading, setLoading] = useState(false);
   const [allData, setAllData] = useState<{ projects: any[]; teams: any[]; tasks: any[] } | null>(null);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
-
+  const [user, setuser] = useState<UserInterface>({})
   const inputRef = useRef<HTMLInputElement>(null);
   const mobileInputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Handle Cmd+K
   useEffect(() => {
+
+    const getuserfunc = async () => {
+      const getuser = await fetch('/api/user')
+      const response = await getuser.json()
+      if (response) {
+        setuser(response)
+      }
+      console.log(response)
+
+    }
+    getuserfunc()
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
@@ -46,6 +60,7 @@ export default function Topbar() {
     };
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
+
   }, []);
 
   // Close dropdown on click outside
@@ -147,7 +162,7 @@ export default function Topbar() {
     setResults(newResults.slice(0, 10));
   }, [searchQuery, allData]);
 
-  const userName = session?.user?.name || (session?.user as any)?.firstName || "John Doe";
+  const userName = user.firstName || user.lastName || 'User'
   const userInitials = userName
     .split(" ")
     .map((n: string) => n[0])
@@ -159,9 +174,8 @@ export default function Topbar() {
     <>
       {isFocused && searchQuery.trim() && (
         <div
-          className={`absolute left-0 right-0 mt-2 bg-white rounded-lg shadow-xl border border-slate-200 overflow-hidden z-50 ${
-            isMobile ? "top-full" : "top-full"
-          }`}
+          className={`absolute left-0 right-0 mt-2 bg-white rounded-lg shadow-xl border border-slate-200 overflow-hidden z-50 ${isMobile ? "top-full" : "top-full"
+            }`}
         >
           {loading ? (
             <div className="p-4 text-center text-sm text-slate-500">Loading...</div>
@@ -179,13 +193,12 @@ export default function Topbar() {
                   className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 border-b border-slate-100 last:border-0 transition-colors"
                 >
                   <div
-                    className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                      result.type === "project"
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${result.type === "project"
                         ? "bg-blue-100 text-blue-600"
                         : result.type === "team"
-                        ? "bg-purple-100 text-purple-600"
-                        : "bg-amber-100 text-amber-600"
-                    }`}
+                          ? "bg-purple-100 text-purple-600"
+                          : "bg-amber-100 text-amber-600"
+                      }`}
                   >
                     {result.type === "project" && (
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -366,13 +379,12 @@ export default function Topbar() {
                   className="flex items-center gap-3 px-4 py-3.5 hover:bg-slate-50 border-b border-slate-100 last:border-0 transition-colors"
                 >
                   <div
-                    className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
-                      result.type === "project"
+                    className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${result.type === "project"
                         ? "bg-blue-100 text-blue-600"
                         : result.type === "team"
-                        ? "bg-purple-100 text-purple-600"
-                        : "bg-amber-100 text-amber-600"
-                    }`}
+                          ? "bg-purple-100 text-purple-600"
+                          : "bg-amber-100 text-amber-600"
+                      }`}
                   >
                     {result.type === "project" && (
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">

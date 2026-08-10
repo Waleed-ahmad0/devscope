@@ -38,7 +38,10 @@ interface Task {
   assignedTo?: string;
   assignedUser?: string;
 }
-
+interface UserInterface {
+  firstName?: string;
+  lastName?: string;
+}
 export default function DashboardPage() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [createProject, setcreateProject] = useState<boolean>(false);
@@ -65,6 +68,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const { data: session, status } = useSession();
+  const [user, setuser] = useState<UserInterface>()
 
   useEffect(() => {
     if (session?.user?.id) {
@@ -82,6 +86,7 @@ export default function DashboardPage() {
           if (data.error) {
             throw new Error(data.error);
           }
+          setuser(data.finduser)
           setActivities(data.getactivitys);
           setteamnames(data.teamNames);
           settotalteams(data.totalTeams);
@@ -294,7 +299,7 @@ export default function DashboardPage() {
           <h1 className="text-[20px] sm:text-[26px] font-extrabold text-slate-900 tracking-tight mb-[3px]">
             Good morning,{" "}
             <span className="text-blue-600">
-              {session?.user?.name || session?.user?.firstName}
+{user?.firstName} {user?.lastName}
             </span>{" "}
             👋
           </h1>
@@ -519,7 +524,6 @@ export default function DashboardPage() {
                   "#db2777",
                 ];
 
-                // Fixed hash function (was missing semicolon and had weird syntax)
                 let h = 0;
                 for (const c of project._id) {
                   h = c.charCodeAt(0) + ((h << 5) - h);
@@ -535,13 +539,13 @@ export default function DashboardPage() {
                   >
                     <div
                       className="w-10 h-10 rounded-[10px] flex items-center justify-center text-[13px] font-extrabold text-white shrink-0"
-                      style={{ backgroundColor: color }}  // Changed from "background" to "backgroundColor"
+                      style={{ backgroundColor: color }}
                     >
-                      {project.name?.slice(0, 2).toUpperCase() || "PR"}  {/* Added optional chaining */}
+                      {project.name?.slice(0, 2).toUpperCase() || "PR"}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-bold text-slate-800 truncate group-hover:text-blue-600 transition-colors">
-                        {project.name || "Untitled"}  {/* Added fallback */}
+                        {project.name || "Untitled"}
                       </div>
                       <div className="text-xs text-slate-400 mt-0.5">
                         {taskfilter(project._id)} tasks ·{" "}
@@ -555,7 +559,7 @@ export default function DashboardPage() {
                         />
                       </div>
                       <span className="text-xs font-bold text-slate-500 w-9 text-right shrink-0">
-                      
+
                       </span>
                     </div>
                     <svg
@@ -567,7 +571,7 @@ export default function DashboardPage() {
                       strokeWidth="2.5"
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      className="shrink-0 group-hover:stroke-blue-400 transition-colors" 
+                      className="shrink-0 group-hover:stroke-blue-400 transition-colors"
                     >
                       <path d="M9 5l7 7-7 7" />
                     </svg>

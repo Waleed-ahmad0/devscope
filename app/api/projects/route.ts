@@ -55,8 +55,6 @@ export async function POST(req: Request) {
     await dbConnect();
     const body: getbody = await req.json();
 
-    // Must actually be a member of the team you're creating a project under -
-    // this was previously unchecked, letting anyone create a project on any team.
     const membership = await requireTeamMember(body.team, session.user.id);
     if (!membership.ok) {
       return NextResponse.json(

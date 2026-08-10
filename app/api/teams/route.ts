@@ -54,10 +54,7 @@ export async function POST(req: Request) {
 
     const objectId = new mongoose.Types.ObjectId(session.user.id);
 
-    // The creator is the admin - make sure they're actually IN `members`
-    // with that role, not just referenced via `adminId`. Otherwise any
-    // check that reads `members` (rather than `adminId`) locks them out
-    // of their own team.
+   
     const alreadyIncluded = members.some(
       (m) => m.user.toString() === objectId.toString(),
     );
@@ -116,7 +113,7 @@ export async function DELETE(req: Request) {
 
       await Project.deleteMany({ team: id });
       await activity.deleteMany({ teamId: id });
-      await Task.deleteMany({ projectId: { $in: projectIds } }); // was missing $in
+      await Task.deleteMany({ projectId: { $in: projectIds } }); 
     }
 
     return NextResponse.json({

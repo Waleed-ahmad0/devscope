@@ -8,6 +8,7 @@ import Task from "@/models/tasks";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { requireTeamMember } from "@/lib/authorize";
+import User from "@/models/users";
 
 export async function GET(req: Request) {
   try {
@@ -20,11 +21,11 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const projectId = searchParams.get("projectId");
     const teamId = searchParams.get("teamId");
-    const wantsOwnDashboard = searchParams.get("userId"); 
+    const wantsOwnDashboard = searchParams.get("userId");
 
     if (wantsOwnDashboard) {
       const userObjectId = new mongoose.Types.ObjectId(session.user.id);
-
+      const finduser = await User.findOne({ _id: userObjectId })
       const getteams = await Team.find({
         $or: [{ adminId: userObjectId }, { "members.user": userObjectId }],
       });
@@ -49,6 +50,7 @@ export async function GET(req: Request) {
 
       return NextResponse.json(
         {
+          finduser,
           message: "fetched activity",
           getactivitys,
           teamNames,
