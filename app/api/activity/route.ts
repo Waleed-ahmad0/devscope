@@ -25,7 +25,7 @@ export async function GET(req: Request) {
 
     if (wantsOwnDashboard) {
       const userObjectId = new mongoose.Types.ObjectId(session.user.id);
-      const finduser = await User.findOne({ _id: userObjectId })
+      const finduser = await User.findById(userObjectId).select("firstName lastName");
       const getteams = await Team.find({
         $or: [{ adminId: userObjectId }, { "members.user": userObjectId }],
       });

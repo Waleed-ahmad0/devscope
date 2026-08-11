@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSidebar } from "./SidebarContext";
+import { useUser } from "./UserProvider";
 
 interface SearchResult {
   type: "project" | "team" | "task";
@@ -13,11 +14,10 @@ interface SearchResult {
   subtitle?: string;
   url: string;
 }
-interface UserInterface {
-  firstName?: string;
-  lastName?: string;
-}
+
 export default function Topbar() {
+    const {user}= useUser()
+
   const router = useRouter();
   const { data: session } = useSession();
   const { toggle } = useSidebar();
@@ -28,24 +28,13 @@ export default function Topbar() {
   const [loading, setLoading] = useState(false);
   const [allData, setAllData] = useState<{ projects: any[]; teams: any[]; tasks: any[] } | null>(null);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
-  const [user, setuser] = useState<UserInterface>({})
   const inputRef = useRef<HTMLInputElement>(null);
   const mobileInputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Handle Cmd+K
   useEffect(() => {
 
-    const getuserfunc = async () => {
-      const getuser = await fetch('/api/user')
-      const response = await getuser.json()
-      if (response) {
-        setuser(response)
-      }
-      console.log(response)
 
-    }
-    getuserfunc()
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
@@ -63,7 +52,6 @@ export default function Topbar() {
 
   }, []);
 
-  // Close dropdown on click outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (
@@ -81,7 +69,6 @@ export default function Topbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Auto-focus mobile input when search opens
   useEffect(() => {
     if (mobileSearchOpen) {
       setTimeout(() => mobileInputRef.current?.focus(), 50);
@@ -91,7 +78,6 @@ export default function Topbar() {
     }
   }, [mobileSearchOpen]);
 
-  // Fetch data on focus
   const handleFocus = async () => {
     setIsFocused(true);
     if (!allData && session?.user && (session.user as any).id) {
@@ -113,7 +99,6 @@ export default function Topbar() {
     }
   };
 
-  // Perform search
   useEffect(() => {
     if (!allData || !searchQuery.trim()) {
       setResults([]);
@@ -162,7 +147,7 @@ export default function Topbar() {
     setResults(newResults.slice(0, 10));
   }, [searchQuery, allData]);
 
-  const userName = user.firstName || user.lastName || 'User'
+  const userName = user?.firstName || user?.lastName || 'User'
   const userInitials = userName
     .split(" ")
     .map((n: string) => n[0])
@@ -240,14 +225,11 @@ export default function Topbar() {
 
   return (
     <>
-      {/* Main Topbar */}
       <header className="h-16 bg-white border-b border-slate-200 fixed top-0 right-0 left-0 md:left-64 z-30 transition-[left] duration-300">
         <div className="h-full px-3 sm:px-6 flex items-center justify-between gap-2 sm:gap-4">
 
-          {/* Left Section */}
           <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
 
-            {/* Hamburger — mobile only (for sidebar toggle if needed) */}
             <button
               className="md:hidden flex items-center justify-center w-9 h-9 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors shrink-0"
               aria-label="Open menu"
@@ -258,7 +240,6 @@ export default function Topbar() {
               </svg>
             </button>
 
-            {/* Breadcrumb — desktop only */}
             <nav className="hidden lg:flex items-center text-sm shrink-0">
               <Link href="/dashboard" className="text-slate-600 hover:text-slate-900 transition-colors">
                 Dashboard
@@ -271,7 +252,6 @@ export default function Topbar() {
 
             <div className="hidden lg:block w-px h-6 bg-slate-200 shrink-0"></div>
 
-            {/* Desktop Search */}
             <div className="hidden sm:block flex-1 max-w-xl">
               <div className="relative" ref={dropdownRef}>
                 <svg
@@ -302,10 +282,8 @@ export default function Topbar() {
             </div>
           </div>
 
-          {/* Right Section */}
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
 
-            {/* Mobile search icon */}
             <button
               className="sm:hidden flex items-center justify-center w-9 h-9 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors"
               aria-label="Open search"
@@ -316,7 +294,6 @@ export default function Topbar() {
               </svg>
             </button>
 
-            {/* User button */}
             <button className="flex items-center gap-2 sm:gap-3 pl-1 sm:pl-2 pr-2 sm:pr-3 py-1.5 hover:bg-slate-100 rounded-lg transition-all group">
               <div className="w-8 h-8 bg-linear-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center text-white font-semibold text-sm shrink-0">
                 {userInitials}
@@ -329,10 +306,8 @@ export default function Topbar() {
         </div>
       </header>
 
-      {/* Mobile Full-Screen Search Overlay */}
       {mobileSearchOpen && (
         <div className="sm:hidden fixed inset-0 z-50 bg-white flex flex-col">
-          {/* Search bar row */}
           <div className="flex items-center gap-3 px-4 h-16 border-b border-slate-200 shrink-0">
             <div className="relative flex-1">
               <svg

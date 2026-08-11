@@ -2,35 +2,20 @@
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useSidebar } from "../components/SidebarContext";
-interface UserInterface {
-  firstName?: string;
-  lastName?: string;
-}
+import { useUser } from "./UserProvider";
+
 export default function Sidebar() {
+  const {user}= useUser()
   const { data: session } = useSession();
   const pathname = usePathname();
   const { isOpen, close } = useSidebar();
-  const [user, setuser] = useState<UserInterface>()
 
   useEffect(() => {
     close();
   }, [pathname]);
-  useEffect(() => {
 
-    const getuserfunc = async () => {
-      const getuser = await fetch('/api/user')
-      const response = await getuser.json()
-      if (response) {
-        setuser(response)
-      }
-      console.log(response)
-
-    }
-    getuserfunc()
-
-  }, [])
 
   useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "";
