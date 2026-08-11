@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import CreateProject from "@/components/CreateProject";
 import CreateTeam from "@/components/CreateTeam";
+import { useUser } from "@/components/UserProvider";
 
 interface activities {
   _id: string;
@@ -44,20 +45,11 @@ interface UserInterface {
 }
 export default function DashboardPage() {
   const [refreshKey, setRefreshKey] = useState(0);
+  const {user}= useUser()
   const [createProject, setcreateProject] = useState<boolean>(false);
   const [createTeam, setcreateTeam] = useState<boolean>(false);
   const [quickMenuOpen, setQuickMenuOpen] = useState(false);
   const quickMenuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (quickMenuRef.current && !quickMenuRef.current.contains(e.target as Node)) {
-        setQuickMenuOpen(false);
-      }
-    };
-    if (quickMenuOpen) document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [quickMenuOpen]);
   const [activities, setActivities] = useState<activities[]>([]);
   const [teamnames, setteamnames] = useState<teams[]>([]);
   const [projects, setprojects] = useState<projectsshow[]>([]);
@@ -68,8 +60,16 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const { data: session, status } = useSession();
-  const [user, setuser] = useState<UserInterface>()
 
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (quickMenuRef.current && !quickMenuRef.current.contains(e.target as Node)) {
+        setQuickMenuOpen(false);
+      }
+    };
+    if (quickMenuOpen) document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [quickMenuOpen]);
   useEffect(() => {
     if (session?.user?.id) {
       const getactivityfunc = async () => {
@@ -86,7 +86,6 @@ export default function DashboardPage() {
           if (data.error) {
             throw new Error(data.error);
           }
-          setuser(data.finduser)
           setActivities(data.getactivitys);
           setteamnames(data.teamNames);
           settotalteams(data.totalTeams);
@@ -297,7 +296,7 @@ export default function DashboardPage() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-[20px] sm:text-[26px] font-extrabold text-slate-900 tracking-tight mb-[3px]">
-            Good morning,{" "}
+            hello,{" "}
             <span className="text-blue-600">
               {user?.firstName} {user?.lastName}
             </span>{" "}

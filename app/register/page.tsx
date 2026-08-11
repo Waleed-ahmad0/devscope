@@ -39,7 +39,6 @@ export default function Page() {
             const data = await res.json()
 
             if (!res.ok) {
-                console.log(data)
                 seterror(data.error)
                 throw new Error(data.error)
 

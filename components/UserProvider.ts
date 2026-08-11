@@ -22,7 +22,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
                 const res = await fetch("/api/user");
                 if (!res.ok) return;
                 const data = await res.json();
-                console.log('data',data)
                 setUser(data);
             } finally {
                 setLoading(false);

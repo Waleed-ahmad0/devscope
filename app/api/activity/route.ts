@@ -25,7 +25,6 @@ export async function GET(req: Request) {
 
     if (wantsOwnDashboard) {
       const userObjectId = new mongoose.Types.ObjectId(session.user.id);
-      const finduser = await User.findById(userObjectId).select("firstName lastName");
       const getteams = await Team.find({
         $or: [{ adminId: userObjectId }, { "members.user": userObjectId }],
       });
@@ -50,7 +49,6 @@ export async function GET(req: Request) {
 
       return NextResponse.json(
         {
-          finduser,
           message: "fetched activity",
           getactivitys,
           teamNames,
