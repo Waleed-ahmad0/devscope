@@ -124,17 +124,16 @@ See `.env.example` for the full list. At minimum, you'll need:
 MONGODB_URI=your_mongodb_connection_string
 
 # NextAuth
-NEXTAUTH_SECRET=your_random_secret_here
-NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your_random_secret_here.
+NEXTAUTH_URL=http://localhost:3000.
 
 # Google OAuth
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
+GOOGLE_CLIENT_ID=your_google_client_id.
+GOOGLE_CLIENT_SECRET=your_google_client_secret.
 
 # GitHub OAuth
-GITHUB_CLIENT_ID=your_github_client_id
-GITHUB_CLIENT_SECRET=your_github_client_secret
-
+GITHUB_CLIENT_ID=your_github_client_id.
+GITHUB_CLIENT_SECRET=your_github_client_secret.
 # Discord OAuth
 DISCORD_CLIENT_ID=your_discord_client_id
 DISCORD_CLIENT_SECRET=your_discord_client_secret
