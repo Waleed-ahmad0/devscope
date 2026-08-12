@@ -125,5 +125,5 @@ Tests run automatically on every push via GitHub Actions (badge above). Current 
    DISCORD_CLIENT_SECRET=your_discord_client_secret
    GOOGLE_CLIENT_ID=your_google_client_id
    GOOGLE_CLIENT_SECRET=your_google_client_secret
-
+> OAuth variables are only needed if you want to test social login. Email/password signup works without them.
    ```
