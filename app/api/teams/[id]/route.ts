@@ -139,11 +139,12 @@ export async function PATCH(
 
     return NextResponse.json(team, { status: 200 });
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Server error" },
-      { status: 500 },
-    );
-  }
+  console.error("PATCH /api/teams/[id] failed:", error); // temporary
+  return NextResponse.json(
+    { error: error instanceof Error ? error.message : "Server error" },
+    { status: 500 },
+  );
+}
 }
 
 export async function DELETE(
