@@ -8,7 +8,7 @@ A full-stack team collaboration and project management platform built to manage 
 
 ## 📸 Preview
 
-![DevScope dashboard](./public/screenshots/dashboard.png)
+![DevScope dashboard](./public/image.png)
 
 ---
 
@@ -120,9 +120,23 @@ Tests run automatically on every push via GitHub Actions (badge above). Current 
 See `.env.example` for the full list. At minimum, you'll need:
 
 | Variable | Description |
-|---|---|
-| `MONGODB_URI` | MongoDB connection string |
-| `NEXTAUTH_SECRET` | Random secret used to sign session tokens |
-| `NEXTAUTH_URL` | Your app's base URL (e.g. `http://localhost:3000` in development) |
+# Database
+MONGODB_URI=your_mongodb_connection_string
+
+# NextAuth
+NEXTAUTH_SECRET=your_random_secret_here
+NEXTAUTH_URL=http://localhost:3000
+
+# Google OAuth
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+
+# GitHub OAuth
+GITHUB_CLIENT_ID=your_github_client_id
+GITHUB_CLIENT_SECRET=your_github_client_secret
+
+# Discord OAuth
+DISCORD_CLIENT_ID=your_discord_client_id
+DISCORD_CLIENT_SECRET=your_discord_client_secret
 
 ---
